@@ -1,0 +1,165 @@
+<!-- alertas/templates/alertas/manage_keywords.html -->
+{% extends 'alertas/base_alertas.html' %}
+{% load static %}
+
+{% block title %}Mis Palabras Clave{% endblock %}
+
+{% block alertas_content %}
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-md-8">
+                <h1>Mis Palabras Clave</h1>
+                <p class="lead">
+                    Gestiona tus palabras clave para filtrar automáticamente las alertas que te interesan.
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'alertas:alertas_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver a Alertas
+                </a>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <!-- Formulario para añadir nueva palabra clave -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Añadir nueva palabra clave</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'alertas:manage_keywords' %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="{{ form.word.id_for_label }}" class="form-label">{{ form.word.label }}</label>
+                                {{ form.word }}
+                                {% if form.word.errors %}
+                                    <div class="text-danger">
+                                        {{ form.word.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Añadir
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <!-- Instrucciones -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">¿Cómo funciona?</h5>
+                    </div>
+                    <div class="card-body">
+                        <ol>
+                            <li>Añade palabras clave relacionadas con tus temas de interés.</li>
+                            <li>Activa o desactiva palabras clave según tus necesidades.</li>
+                            <li>Cuando el filtro está activado, solo verás alertas que contengan tus palabras clave.</li>
+                            <li>Puedes activar o desactivar el filtro en cualquier momento desde la pantalla de alertas.</li>
+                        </ol>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Las palabras clave se buscan tanto en el título como en la descripción de las alertas.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Listado de palabras clave -->
+        <div class="card mt-4 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Mis palabras clave</h5>
+                <span class="badge bg-primary">Total: {{ keywords.count }}</span>
+            </div>
+            <div class="card-body">
+                {% if keywords %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Palabra clave</th>
+                                    <th>Estado</th>
+                                    <th>Fecha de creación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for keyword in keywords %}
+                                    <tr>
+                                        <td>{{ keyword.word }}</td>
+                                        <td>
+                                            {% if keyword.active %}
+                                                <span class="badge bg-success">Activa</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactiva</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ keyword.created_at|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <form method="post" action="{% url 'alertas:toggle_keyword' keyword.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm {% if keyword.active %}btn-warning{% else %}btn-success{% endif %}">
+                                                        {% if keyword.active %}
+                                                            <i class="bi bi-pause-fill"></i> Desactivar
+                                                        {% else %}
+                                                            <i class="bi bi-play-fill"></i> Activar
+                                                        {% endif %}
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="{% url 'alertas:delete_keyword' keyword.id %}" class="d-inline ms-1">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Está seguro de eliminar esta palabra clave?')">
+                                                        <i class="bi bi-trash"></i> Eliminar
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> No tienes palabras clave guardadas. Añade algunas para comenzar a filtrar alertas.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- <script> -->
+    $(document).ready(function() {
+        // Función para mostrar mensajes de alerta
+        function showAlert(message, type) {
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                </div>
+            `;
+            
+            // Insertar al principio del contenido
+            $('#alertas_content').prepend(alertHtml);
+            
+            // Auto cerrar después de 5 segundos
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+        }
+        
+    //     // Si hay mensajes en la vista, mostrarlos
+    //     {% if messages %}
+    //         {% for message in messages %}
+    //             showAlert("{{ message }}", "{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}");
+    //         {% endfor %}
+    //     {% endif %}
+    // });
+// </script>
+// {% endblock %}

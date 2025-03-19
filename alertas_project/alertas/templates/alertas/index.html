@@ -1,0 +1,453 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero bg-primary text-white py-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h1 class="display-4 fw-bold mb-4">Sistema de Monitoreo de Alertas</h1>
+        <p class="lead mb-4">Mantente informado sobre notificaciones importantes en tu sector con nuestro sistema de seguimiento inteligente.</p>
+        <div class="d-flex gap-3">
+          <a href="{% url 'alertas:alertas_list' %}" class="btn btn-light btn-lg">Ver Alertas</a>
+          <a href="#pricing" class="btn btn-outline-light btn-lg">Ver Planes</a>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <img src="{% static 'img/dashboard-preview.png' %}" alt="Dashboard de Alertas" class="img-fluid rounded shadow-lg">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="features py-5" id="features">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Características Principales</h2>
+      <p class="text-muted">Todo lo que necesitas para mantenerte al día con información crítica</p>
+    </div>
+    
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-primary text-white rounded-circle mb-3">
+              <i class="bi bi-bell-fill"></i>
+            </div>
+            <h3 class="h5 fw-bold">Alertas Personalizadas</h3>
+            <p class="text-muted mb-0">Configura palabras clave específicas para recibir solo las alertas relevantes para tu negocio.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-primary text-white rounded-circle mb-3">
+              <i class="bi bi-filter-circle-fill"></i>
+            </div>
+            <h3 class="h5 fw-bold">Filtros Avanzados</h3>
+            <p class="text-muted mb-0">Filtra por institución, país, fecha y más para encontrar exactamente lo que buscas.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-primary text-white rounded-circle mb-3">
+              <i class="bi bi-globe2"></i>
+            </div>
+            <h3 class="h5 fw-bold">Cobertura Internacional</h3>
+            <p class="text-muted mb-0">Monitoreo de alertas en múltiples países e instituciones para una visión global.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-primary text-white rounded-circle mb-3">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <h3 class="h5 fw-bold">Actualizaciones en Tiempo Real</h3>
+            <p class="text-muted mb-0">Recibe notificaciones inmediatas cuando aparezcan nuevas alertas relevantes.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-primary text-white rounded-circle mb-3">
+              <i class="bi bi-bar-chart-fill"></i>
+            </div>
+            <h3 class="h5 fw-bold">Análisis de Datos</h3>
+            <p class="text-muted mb-0">Visualiza tendencias y estadísticas sobre las alertas para tomar mejores decisiones.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-primary text-white rounded-circle mb-3">
+              <i class="bi bi-file-earmark-text-fill"></i>
+            </div>
+            <h3 class="h5 fw-bold">Informes Detallados</h3>
+            <p class="text-muted mb-0">Genera reportes personalizados y expórtalos en múltiples formatos.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works py-5 bg-light" id="how-it-works">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Cómo Funciona</h2>
+      <p class="text-muted">Un sistema simple y eficiente para mantenerte informado</p>
+    </div>
+    
+    <div class="row">
+      <div class="col-lg-10 mx-auto">
+        <div class="row g-5">
+          <div class="col-md-6 d-flex">
+            <div class="step-number">1</div>
+            <div>
+              <h3 class="h5 fw-bold">Configura tus Palabras Clave</h3>
+              <p class="text-muted">Define las palabras clave específicas para tu industria o intereses que deseas monitorear.</p>
+            </div>
+          </div>
+          
+          <div class="col-md-6 d-flex">
+            <div class="step-number">2</div>
+            <div>
+              <h3 class="h5 fw-bold">Definir Fuentes a Monitorear</h3>
+              <p class="text-muted">Selecciona las instituciones, países o fuentes de las que quieres recibir alertas.</p>
+            </div>
+          </div>
+          
+          <div class="col-md-6 d-flex">
+            <div class="step-number">3</div>
+            <div>
+              <h3 class="h5 fw-bold">Recibe Notificaciones</h3>
+              <p class="text-muted">Obtén alertas por email o dentro de la plataforma cuando se publican nuevas notificaciones relevantes.</p>
+            </div>
+          </div>
+          
+          <div class="col-md-6 d-flex">
+            <div class="step-number">4</div>
+            <div>
+              <h3 class="h5 fw-bold">Accede a Información Detallada</h3>
+              <p class="text-muted">Revisa información completa de cada alerta, incluyendo fuentes originales y detalles adicionales.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Product Details Section -->
+<section class="product-details py-5" id="product-details">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-6 order-md-2">
+        <h2 class="fw-bold mb-4">Una Plataforma Completa de Monitoreo</h2>
+        <p class="lead mb-4">Nuestro sistema de alertas está diseñado para profesionales que necesitan estar al día con información crítica en su sector.</p>
+        
+        <ul class="feature-list">
+          <li>
+            <i class="bi bi-check-circle-fill text-success me-2"></i>
+            <strong>Dashboard intuitivo</strong> que muestra las alertas más recientes y relevantes
+          </li>
+          <li>
+            <i class="bi bi-check-circle-fill text-success me-2"></i>
+            <strong>Filtros potentes</strong> que permiten encontrar rápidamente la información necesaria
+          </li>
+          <li>
+            <i class="bi bi-check-circle-fill text-success me-2"></i>
+            <strong>Sistema de notificaciones</strong> configurables por email y aplicación
+          </li>
+          <li>
+            <i class="bi bi-check-circle-fill text-success me-2"></i>
+            <strong>API disponible</strong> para integración con tus sistemas existentes
+          </li>
+          <li>
+            <i class="bi bi-check-circle-fill text-success me-2"></i>
+            <strong>Acceso móvil</strong> para consultar alertas desde cualquier dispositivo
+          </li>
+        </ul>
+        
+        <a href="{% url 'alertas:alertas_list' %}" class="btn btn-primary mt-3">Explorar la Plataforma</a>
+      </div>
+      <div class="col-md-6 order-md-1">
+        <img src="{% static 'img/product-details.png' %}" alt="Detalles del producto" class="img-fluid rounded shadow-lg">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing Section -->
+<section class="pricing py-5 bg-light" id="pricing">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Planes y Precios</h2>
+      <p class="text-muted">Soluciones flexibles para equipos de todos los tamaños</p>
+    </div>
+    
+    <div class="row g-4">
+      <!-- Plan Básico -->
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body p-4">
+            <h3 class="fw-bold text-center mb-3">Básico</h3>
+            <div class="price text-center mb-4">
+              <span class="currency">$</span>
+              <span class="amount">19</span>
+              <span class="period">/mes</span>
+            </div>
+            
+            <ul class="plan-features">
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> 1 usuario</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> 5 palabras clave</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> 3 fuentes a monitorear</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Notificaciones por email</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Alertas ilimitadas</li>
+              <li><i class="bi bi-x-circle-fill text-muted me-2"></i> API access</li>
+              <li><i class="bi bi-x-circle-fill text-muted me-2"></i> Reportes avanzados</li>
+            </ul>
+            
+            <a href="#" class="btn btn-outline-primary w-100 mt-4">Comenzar</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Plan Profesional -->
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow">
+          <div class="card-header text-center p-3 bg-primary text-white border-0">
+            <span class="badge bg-warning">Más popular</span>
+          </div>
+          <div class="card-body p-4">
+            <h3 class="fw-bold text-center mb-3">Profesional</h3>
+            <div class="price text-center mb-4">
+              <span class="currency">$</span>
+              <span class="amount">49</span>
+              <span class="period">/mes</span>
+            </div>
+            
+            <ul class="plan-features">
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> 5 usuarios</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> 15 palabras clave</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> 10 fuentes a monitorear</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Notificaciones por email</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Alertas ilimitadas</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> API access</li>
+              <li><i class="bi bi-x-circle-fill text-muted me-2"></i> Reportes avanzados</li>
+            </ul>
+            
+            <a href="#" class="btn btn-primary w-100 mt-4">Comenzar</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Plan Empresarial -->
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body p-4">
+            <h3 class="fw-bold text-center mb-3">Empresarial</h3>
+            <div class="price text-center mb-4">
+              <span class="currency">$</span>
+              <span class="amount">99</span>
+              <span class="period">/mes</span>
+            </div>
+            
+            <ul class="plan-features">
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Usuarios ilimitados</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Palabras clave ilimitadas</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Fuentes ilimitadas</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Notificaciones personalizadas</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Alertas ilimitadas</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> API access</li>
+              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Reportes avanzados</li>
+            </ul>
+            
+            <a href="#" class="btn btn-outline-primary w-100 mt-4">Contactar</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="text-center mt-5">
+      <p class="text-muted">¿Necesitas un plan personalizado para tu organización?</p>
+      <a href="#contact" class="btn btn-outline-primary">Contactar con ventas</a>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="testimonials py-5" id="testimonials">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Lo que dicen nuestros clientes</h2>
+      <p class="text-muted">Empresas que confían en nuestro sistema de alertas</p>
+    </div>
+    
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-4">
+              <img src="{% static 'img/testimonial-1.jpg' %}" alt="Cliente" class="rounded-circle me-3" width="60">
+              <div>
+                <h4 class="h5 mb-0">María Rodríguez</h4>
+                <p class="text-muted mb-0">Directora de Regulación, Farmacéutica XYZ</p>
+              </div>
+            </div>
+            <blockquote class="mb-0">
+              <p>"Este sistema nos ha permitido estar al día con todas las alertas regulatorias. Ha sido fundamental para garantizar que cumplimos con los requisitos en todos los países donde operamos."</p>
+            </blockquote>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-4">
+              <img src="{% static 'img/testimonial-2.jpg' %}" alt="Cliente" class="rounded-circle me-3" width="60">
+              <div>
+                <h4 class="h5 mb-0">Carlos Mendoza</h4>
+                <p class="text-muted mb-0">Gerente de Cumplimiento, Banco ABC</p>
+              </div>
+            </div>
+            <blockquote class="mb-0">
+              <p>"La capacidad de filtrar alertas por país e institución ha sido extremadamente útil para nuestro equipo. Podemos asignar alertas específicas a diferentes departamentos según la relevancia."</p>
+            </blockquote>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-4">
+              <img src="{% static 'img/testimonial-3.jpg' %}" alt="Cliente" class="rounded-circle me-3" width="60">
+              <div>
+                <h4 class="h5 mb-0">Ana Gómez</h4>
+                <p class="text-muted mb-0">Directora de Operaciones, Consultora DEF</p>
+              </div>
+            </div>
+            <blockquote class="mb-0">
+              <p>"Implementamos el sistema hace 6 meses y ha transformado nuestra forma de trabajar. Ahora podemos responder rápidamente a cambios regulatorios y mantenernos siempre un paso adelante."</p>
+            </blockquote>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="faq py-5 bg-light" id="faq">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Preguntas Frecuentes</h2>
+      <p class="text-muted">Respuestas a las dudas más comunes</p>
+    </div>
+    
+    <div class="row">
+      <div class="col-lg-8 mx-auto">
+        <div class="accordion" id="accordionFAQ">
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h3 class="accordion-header">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                ¿Cómo se actualiza la información de alertas?
+              </button>
+            </h3>
+            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#accordionFAQ">
+              <div class="accordion-body">
+                Nuestro sistema monitorea continuamente las fuentes seleccionadas y actualiza la información en tiempo real. Las alertas nuevas son procesadas y categorizadas automáticamente, y se envían notificaciones según las preferencias configuradas.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                ¿Puedo personalizar las notificaciones?
+              </button>
+            </h3>
+            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+              <div class="accordion-body">
+                Sí, puedes configurar notificaciones personalizadas para cada usuario. Es posible recibir alertas por email, dentro de la plataforma, o incluso por SMS en los planes superiores. También puedes establecer la frecuencia y el tipo de alertas que deseas recibir.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                ¿Qué países e instituciones están incluidos?
+              </button>
+            </h3>
+            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+              <div class="accordion-body">
+                Nuestro sistema cubre más de 50 países en América, Europa y Asia, y monitorea cientos de instituciones regulatorias, gubernamentales y sectoriales. La lista completa está disponible en nuestra documentación y se actualiza constantemente.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                ¿Cómo funciona la integración API?
+              </button>
+            </h3>
+            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+              <div class="accordion-body">
+                Nuestra API RESTful permite integrar las alertas con tus sistemas existentes. Proporcionamos documentación detallada y ejemplos de código para facilitar la integración. La API está disponible en los planes Profesional y Empresarial.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 shadow-sm">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                ¿Puedo cambiar de plan en cualquier momento?
+              </button>
+            </h3>
+            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+              <div class="accordion-body">
+                Sí, puedes actualizar o cambiar tu plan en cualquier momento. Los cambios se aplican inmediatamente y se ajustará tu facturación de forma proporcional al tiempo restante en tu ciclo de facturación actual.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta py-5 bg-primary text-white" id="contact">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-8 mx-auto text-center">
+        <h2 class="fw-bold mb-4">¿Listo para mantenerte informado?</h2>
+        <p class="lead mb-4">Comienza a monitorear alertas importantes hoy mismo. Regístrate para una prueba gratuita de 14 días.</p>
+        <div class="d-flex gap-3 justify-content-center">
+          <a href="#" class="btn btn-light btn-lg">Comenzar prueba gratuita</a>
+          <a href="#" class="btn btn-outline-light btn-lg">Solicitar demo</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

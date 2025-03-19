@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Barra de navegación específica para alertas (NUEVO) -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light rounded shadow-sm">
+                <div class="container-fluid">
+                    <span class="navbar-brand">Sistema de Alertas</span>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#alertasNavbar" aria-controls="alertasNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="alertasNavbar">
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'alertas_list' %}active{% endif %}" 
+                                   href="{% url 'alertas:alertas_list' %}">
+                                    <i class="bi bi-bell-fill"></i> Alertas
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'manage_keywords' %}active{% endif %}" 
+                                   href="{% url 'alertas:manage_keywords' %}">
+                                    <i class="bi bi-tags-fill"></i> Mis Palabras Clave
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="d-flex">
+                            <span class="navbar-text">
+                                Usuario: {{ request.user.username }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 sidebar bg-light p-3 rounded shadow-sm">
+            {% block sidebar %}{% endblock %}
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9 ps-md-4">
+            {% block alertas_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}

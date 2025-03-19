@@ -1,0 +1,319 @@
+<!-- alertas/templates/alertas/alertas_list.html -->
+{% extends 'alertas/base_alertas.html' %}
+{% load static %}
+
+{% block title %}Listado de Alertas{% endblock %}
+
+{% block sidebar %}
+    <h4>Filtros de búsqueda</h4>
+    
+    <!-- Sección de palabras clave personalizadas -->
+    <div class="card mb-3 border-primary">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Mis palabras clave</h5>
+            <a href="{% url 'alertas:manage_keywords' %}" class="btn btn-sm btn-light">
+                <i class="bi bi-gear-fill"></i> Gestionar
+            </a>
+        </div>
+        <div class="card-body">
+            {% if user_keywords %}
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="toggleKeywordFilter" 
+                               {% if keyword_filter_active %}checked{% endif %}>
+                        <label class="form-check-label" for="toggleKeywordFilter">
+                            Filtrar por mis palabras clave
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="keyword-tags">
+                    {% for keyword in user_keywords %}
+                        <span class="badge bg-info text-dark mb-1">{{ keyword.word }}</span>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info mb-0">
+                    <p class="mb-1">No tienes palabras clave guardadas.</p>
+                    <a href="{% url 'alertas:manage_keywords' %}" class="btn btn-sm btn-primary mt-2">
+                        <i class="bi bi-plus-circle"></i> Agregar palabras clave
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Formulario de filtros sin los campos Usuario, Palabras clave y Búsqueda -->
+    <form method="get" id="filterForm">
+        <div class="filter-section">
+            <label for="id_institution" class="form-label">Institución:</label>
+            {{ form.institution }}
+        </div>
+        
+        <div class="filter-section">
+            <label for="id_country" class="form-label">País:</label>
+            {{ form.country }}
+        </div>
+        
+        <div class="filter-section">
+            <label class="form-label">Rango de fechas:</label>
+            <div class="row">
+                <div class="col">
+                    <label for="id_start_date" class="form-label small">Desde:</label>
+                    {{ form.start_date }}
+                </div>
+                <div class="col">
+                    <label for="id_end_date" class="form-label small">Hasta:</label>
+                    {{ form.end_date }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="filter-section">
+            <label for="id_page_size" class="form-label">Registros por página:</label>
+            {{ form.page_size }}
+        </div>
+        
+        <!-- Campo de búsqueda oculto para mantener sincronizado con el de la cabecera -->
+        <input type="hidden" name="search_text" id="hidden_search_text">
+        
+        <button type="submit" class="btn btn-primary w-100 mt-3">Aplicar filtros</button>
+    </form>
+{% endblock %}
+
+{% block alertas_content %}
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h1>Listado de Alertas</h1>
+            <h4>{{ total_alertas }} resultado(s) encontrado(s)</h4>
+        </div>
+        <div class="col-md-6">
+            <!-- Formulario de búsqueda en cabecera -->
+            <form method="get" id="searchForm" class="d-flex">
+                <input type="text" name="search_text" id="header_search_text" 
+                       class="form-control me-2" placeholder="Buscar en título y descripción..."
+                       value="{{ request.GET.search_text|default:'' }}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+                
+                <!-- Campos ocultos para mantener otros filtros activos -->
+                {% for key, value in request.GET.items %}
+                    {% if key != 'search_text' and key != 'page' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endif %}
+                {% endfor %}
+            </form>
+        </div>
+    </div>
+    
+    {% if page_obj %}
+        {% for alerta in page_obj %}
+            <div class="card mb-3 alerta-card">
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <!-- Espacio para logo/imagen de la institución - SOLUCIÓN MEJORADA -->
+                        <div class="col-auto institution-logo">
+                            <div class="logo-placeholder">
+                                {% if alerta.institution %}
+                                    {% with institution_slug=alerta.institution|slugify %}
+                                    <img src="{% static 'img/instituciones/'|add:institution_slug|add:'.jpg' %}" 
+                                         alt="{{ alerta.institution }}" 
+                                         class="institution-logo-img {% if 'brasil' in institution_slug %}logo-national-emblem{% elif 'diario-oficial' in institution_slug or 'gobierno' in institution_slug or 'ministerio' in institution_slug %}logo-emblem{% endif %}"
+                                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <span class="logo-text" style="display: none;">{{ alerta.institution|slice:":2" }}</span>
+                                    {% endwith %}
+                                {% else %}
+                                    <span class="logo-text">?</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Contenido principal de la alerta -->
+                        <div class="col">
+                            <div class="alerta-content p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <!-- Título en negrita -->
+                                        <h5 class="alerta-title fw-bold mb-1">{{ alerta.title }}</h5>
+                                        <!-- Institución debajo del título -->
+                                        <p class="alerta-institution mb-0">{{ alerta.institution }}</p>
+                                    </div>
+                                    
+                                    <!-- País con bandera a la derecha -->
+                                    <div class="country-badge">
+                                        {% if alerta.country %}
+                                            <span class="country-name">{{ alerta.country }}</span>
+                                            <span class="country-flag ms-2">
+                                                <img src="https://flagcdn.com/24x18/{{ alerta.country|lower|slice:":2" }}.png" 
+                                                     alt="{{ alerta.country }}" 
+                                                     title="{{ alerta.country }}"
+                                                     onerror="this.onerror=null; this.src='https://flagcdn.com/24x18/xx.png';">
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Descripción -->
+                                <div class="alerta-description mb-3">
+                                    <p class="card-text">{{ alerta.description|truncatewords:30 }}</p>
+                                </div>
+                                
+                                <!-- Metadatos y acciones -->
+                                <div class="alerta-metadata">
+                                    <div class="row g-2">
+                                        <div class="col-auto">
+                                            <span class="metadata-item">
+                                                <i class="bi bi-calendar3"></i>
+                                                {{ alerta.presentation_date|date:"d/m/Y" }}
+                                            </span>
+                                        </div>
+                                        <div class="col-auto">
+                                            <span class="metadata-item">
+                                                <i class="bi bi-tag"></i>
+                                                {{ alerta.category }}
+                                            </span>
+                                        </div>
+                                        <div class="col-auto">
+                                            <span class="metadata-item">
+                                                <i class="bi bi-file-earmark-text"></i>
+                                                {{ alerta.source_type }}
+                                            </span>
+                                        </div>
+                                        <div class="col ms-auto text-end">
+                                            {% if alerta.source_url %}
+                                                <a href="{{ alerta.source_url }}" target="_blank" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-link-45deg"></i> Ver Alerta
+                                                </a>
+                                            {% endif %}
+                                            
+                                            <!-- Botón para expandir/colapsar la descripción completa -->
+                                            <button class="btn btn-sm btn-outline-secondary ms-2 show-more-btn" 
+                                                   data-bs-toggle="collapse" 
+                                                   data-bs-target="#description-{{ alerta.id }}">
+                                                <i class="bi bi-arrows-expand"></i> Ver más
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Descripción completa (colapsada) -->
+                                <div class="collapse mt-3" id="description-{{ alerta.id }}">
+                                    <div class="card card-body bg-light">
+                                        {{ alerta.description }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        
+        <!-- Paginación -->
+        <nav aria-label="Paginación">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">Primera</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Anterior</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">Primera</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">Anterior</a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">
+                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Siguiente</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}">Última</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">Siguiente</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">Última</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% else %}
+        <div class="alert alert-info">
+            No hay alertas disponibles con los filtros seleccionados.
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Inicializar las fechas
+        $('#id_start_date').val('{{ min_date }}');
+        $('#id_end_date').val('{{ max_date }}');
+        
+        // Al enviar el formulario de filtros, sincronizar con la búsqueda
+        $('#filterForm').submit(function() {
+            $('#hidden_search_text').val($('#header_search_text').val());
+        });
+        
+        // Al enviar el formulario de búsqueda, incluir los filtros activos
+        $('#searchForm').submit(function() {
+            // Agregar los valores del formulario de filtros
+            $('#filterForm input, #filterForm select').not('[name="search_text"]').each(function() {
+                var name = $(this).attr('name');
+                var value = $(this).val();
+                
+                if (value && name) {
+                    // Verificar si ya existe un campo oculto con este nombre
+                    if ($('#searchForm input[name="' + name + '"]').length === 0) {
+                        $('#searchForm').append('<input type="hidden" name="' + name + '" value="' + value + '">');
+                    }
+                }
+            });
+        });
+        
+        // Cambiar el texto del botón para expandir/colapsar descripción
+        $('.show-more-btn').click(function() {
+            var isCollapsed = $(this).attr('aria-expanded') === 'false';
+            $(this).html(isCollapsed ? 
+                '<i class="bi bi-arrows-collapse"></i> Ver menos' : 
+                '<i class="bi bi-arrows-expand"></i> Ver más');
+        });
+        
+        // Manejar el toggle del filtro de palabras clave
+        $('#toggleKeywordFilter').change(function() {
+            $.ajax({
+                url: '{% url "alertas:toggle_keyword_filter" %}',
+                type: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                success: function(data) {
+                    if (data.success) {
+                        location.reload();
+                    }
+                },
+                error: function() {
+                    alert('Ocurrió un error al cambiar el estado del filtro.');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

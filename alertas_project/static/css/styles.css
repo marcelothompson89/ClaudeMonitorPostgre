@@ -1,0 +1,193 @@
+/* Estilos base para el sistema de alertas */
+
+/* Estilos para el sidebar de filtros */
+.filter-section {
+    margin-bottom: 1.5rem;
+}
+
+.filter-section .form-control,
+.filter-section .form-select {
+    margin-top: 0.25rem;
+}
+
+/* Estilos para las tarjetas de alertas */
+.alerta-card {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.alerta-card:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+/* Ajustes para el tamaño del logo institucional - SOLUCIÓN MEJORADA */
+.institution-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px; /* Reducido de 70px */
+    min-width: 60px; /* Asegura el ancho mínimo */
+    height: 100%;
+    min-height: 60px; /* Reducido de 70px */
+    background-color: #f8f9fa;
+    border-right: 1px solid #e5e5e5;
+    padding: 5px;
+}
+
+.logo-placeholder {
+    width: 40px; /* Reducido de 50px */
+    height: 40px; /* Reducido de 50px */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px; /* Reducido de 5px */
+    background-color: #f8f9fa;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.institution-logo-img {
+    max-width: 32px; /* Reducido de 40px */
+    max-height: 32px; /* Reducido de 40px */
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Para logos con forma más cuadrada como escudos o emblemas */
+.logo-emblem {
+    max-width: 28px; /* Reducido de 35px */
+    max-height: 28px; /* Reducido de 35px */
+}
+
+/* Clase especial para escudos nacionales */
+.logo-national-emblem {
+    max-width: 24px; /* Aún más pequeño para escudos nacionales */
+    max-height: 24px;
+}
+
+.logo-text {
+    font-size: 1rem; /* Reducido ligeramente */
+    font-weight: bold;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.alerta-title {
+    color: #333;
+    font-size: 1.25rem;
+}
+
+.alerta-institution {
+    color: #6c757d;
+    font-size: 0.95rem;
+}
+
+.country-badge {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.country-flag {
+    display: inline-block;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    border-radius: 2px;
+}
+
+.country-flag img {
+    display: block;
+    border-radius: 2px;
+}
+
+.alerta-description {
+    color: #495057;
+    font-size: 0.95rem;
+}
+
+.alerta-metadata {
+    border-top: 1px solid #e9ecef;
+    padding-top: 10px;
+}
+
+.metadata-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #6c757d;
+    font-size: 0.85rem;
+    background-color: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.show-more-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+
+/* Estilos para las etiquetas de palabras clave */
+.keyword-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.keyword-tags .badge {
+    font-size: 0.9rem;
+    padding: 0.35rem 0.65rem;
+}
+
+/* Estilos para la paginación */
+.pagination {
+    margin-top: 2rem;
+}
+
+.pagination .page-link {
+    color: #0d6efd;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none;
+    background-color: #fff;
+    border-color: #dee2e6;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .alerta-metadata .row {
+        flex-direction: column;
+    }
+    
+    .alerta-metadata .col-auto {
+        margin-bottom: 0.5rem;
+    }
+    
+    .alerta-metadata .col.ms-auto {
+        text-align: left !important;
+        margin-top: 0.5rem;
+    }
+    
+    .country-badge {
+        margin-top: 0.5rem;
+    }
+}
