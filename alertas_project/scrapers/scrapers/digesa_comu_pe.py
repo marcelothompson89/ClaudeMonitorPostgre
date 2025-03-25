@@ -49,10 +49,10 @@ async def scrape_digesa_comunicaciones_pe():
                                         'description': texto,
                                         'country': 'Perú',
                                         'source_url': pdf_url,
-                                        'source_type': 'DIGESA',
+                                        'source_type': 'Ejecutivo',
                                         'presentation_date': fecha,
-                                        'category': 'Comunicados',
-                                        'institution': 'DIGESA_comunicaciones_pe',
+                                        'category': 'Normas',
+                                        'institution': 'DIGESA Perú',
                                         'metadata': json.dumps(metadata)
                                     }
                                     items.append(item)

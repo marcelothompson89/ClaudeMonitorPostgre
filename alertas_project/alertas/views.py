@@ -3,15 +3,22 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.http import JsonResponse
+from django.http import HttpResponse
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.urls import reverse_lazy
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 import json
 import datetime
 
-from .models import Alerta, User, Keyword
-from .forms import AlertaFilterForm, KeywordForm
+from .models import Alerta, User, Keyword, EmailAlertConfig
+from .forms import AlertaFilterForm, KeywordForm, EmailAlertConfigForm
 
 @login_required
 def get_keywords_for_user(request):
@@ -212,3 +219,158 @@ def toggle_keyword_filter(request):
         })
     
     return redirect('alertas:alertas_list')
+
+
+# Vista para listar las configuraciones de alertas por correo del usuario
+@login_required
+def email_alert_config_list(request):
+    configs = EmailAlertConfig.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'alertas/email_alert_configs.html', {'configs': configs})
+
+# Vista para crear una nueva configuración de alerta
+@login_required
+def email_alert_config_create(request):
+    if request.method == 'POST':
+        form = EmailAlertConfigForm(request.POST, user=request.user)
+        if form.is_valid():
+            config = form.save(commit=False)
+            config.user = request.user
+            config.save()
+            form.save_m2m()  # Guardar las relaciones ManyToMany
+            messages.success(request, 'Configuración de alerta por correo creada con éxito.')
+            return redirect('alertas:email_alert_configs')
+    else:
+        form = EmailAlertConfigForm(user=request.user)
+    
+    return render(request, 'alertas/email_alert_config_form.html', {'form': form})
+
+# Vista para editar una configuración existente
+@login_required
+def email_alert_config_edit(request, pk):
+    config = get_object_or_404(EmailAlertConfig, pk=pk, user=request.user)
+    
+    if request.method == 'POST':
+        form = EmailAlertConfigForm(request.POST, instance=config, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Configuración de alerta actualizada con éxito.')
+            return redirect('alertas:email_alert_configs')
+    else:
+        form = EmailAlertConfigForm(instance=config, user=request.user)
+    
+    return render(request, 'alertas/email_alert_config_form.html', {'form': form, 'editing': True})
+
+# Vista para eliminar una configuración
+@login_required
+def email_alert_config_delete(request, pk):
+    config = get_object_or_404(EmailAlertConfig, pk=pk, user=request.user)
+    
+    if request.method == 'POST':
+        config.delete()
+        messages.success(request, 'Configuración de alerta eliminada con éxito.')
+        return redirect('alertas:email_alert_configs')
+    
+    return render(request, 'alertas/email_alert_config_confirm_delete.html', {'config': config})
+
+# Vista para enviar manualmente una alerta por correo
+# Modifica la función send_email_alert en alertas/views.py
+
+@login_required
+def send_email_alert(request, pk):
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    config = get_object_or_404(EmailAlertConfig, pk=pk, user=request.user)
+    
+    # Log para verificar que se ha encontrado la configuración
+    logger.info(f"Procesando configuración de alerta: {config.name} (ID: {config.pk})")
+    
+    # Obtener la fecha límite según days_back
+    date_limit = timezone.now().date() - datetime.timedelta(days=config.days_back)
+    logger.info(f"Buscando alertas desde: {date_limit}")
+    
+    # Construir la consulta base
+    query = Alerta.objects.filter(presentation_date__gte=date_limit)
+    
+    # Aplicar filtros si están configurados
+    if config.source_type:
+        query = query.filter(source_type=config.source_type)
+        logger.info(f"Filtrando por tipo de fuente: {config.source_type}")
+    if config.category:
+        query = query.filter(category=config.category)
+        logger.info(f"Filtrando por categoría: {config.category}")
+    if config.country:
+        query = query.filter(country=config.country)
+        logger.info(f"Filtrando por país: {config.country}")
+    if config.institution:
+        query = query.filter(institution=config.institution)
+        logger.info(f"Filtrando por institución: {config.institution}")
+    
+    # Filtrar por palabras clave (si hay alguna configurada)
+    keywords = config.keywords.all()
+    if keywords.exists():
+        from django.db.models import Q
+        keyword_filter = Q()
+        logger.info(f"Filtrando por palabras clave: {', '.join([k.word for k in keywords])}")
+        for keyword in keywords:
+            keyword_filter |= Q(title__icontains=keyword.word) | Q(description__icontains=keyword.word)
+        query = query.filter(keyword_filter)
+    
+    # Ordenar por fecha de presentación (más recientes primero)
+    alertas = query.order_by('-presentation_date')
+    
+    logger.info(f"Encontradas {alertas.count()} alertas que coinciden con los criterios")
+    
+    if alertas.exists():
+        # Preparar el contenido del correo
+        context = {
+            'user': request.user,
+            'alertas': alertas,
+            'config': config,
+        }
+        subject = f'Alertas configuradas: {config.name}'
+        html_message = render_to_string('alertas/email/alert_email.html', context)
+        plain_message = render_to_string('alertas/email/alert_email_plain.html', context)
+        
+        logger.info(f"Preparando correo para: {config.email}")
+        logger.info(f"Asunto: {subject}")
+        logger.info(f"Contenido HTML preparado: {len(html_message)} caracteres")
+        logger.info(f"Contenido texto plano preparado: {len(plain_message)} caracteres")
+        
+        # Enviar el correo
+        try:
+            # Imprimir en la consola para verificación
+            print("\n\n================================")
+            print(f"ENVIANDO CORREO A: {config.email}")
+            print(f"ASUNTO: {subject}")
+            print("--------------------------------")
+            print("CONTENIDO TEXTO PLANO:")
+            print(plain_message)
+            print("--------------------------------")
+            print("CONTENIDO HTML:")
+            print(html_message)
+            print("================================\n\n")
+            
+            send_mail(
+                subject=subject,
+                message=plain_message,
+                from_email=None,  # Usará DEFAULT_FROM_EMAIL de settings.py
+                recipient_list=[config.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+            
+            # Actualizar la fecha del último envío
+            config.last_sent = timezone.now()
+            config.save()
+            
+            logger.info(f"Correo enviado exitosamente a {config.email}")
+            messages.success(request, f'Alerta enviada con éxito a {config.email}. Se encontraron {alertas.count()} alertas.')
+        except Exception as e:
+            logger.error(f"Error al enviar correo: {str(e)}")
+            messages.error(request, f'Error al enviar la alerta: {str(e)}')
+    else:
+        logger.info("No se encontraron alertas que coincidan con los criterios")
+        messages.info(request, 'No se encontraron alertas que coincidan con los criterios configurados.')
+    
+    return redirect('alertas:email_alert_configs')

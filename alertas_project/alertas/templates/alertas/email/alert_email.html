@@ -1,0 +1,113 @@
+{# alertas/templates/alertas/email/alert_email.html #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Alertas configuradas: {{ config.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .alert-item {
+            margin-bottom: 25px;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            background-color: #f8f9fa;
+        }
+        .alert-title {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        .alert-meta {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        .alert-desc {
+            margin-bottom: 10px;
+        }
+        .alert-link {
+            display: inline-block;
+            color: #fff;
+            background-color: #3498db;
+            padding: 5px 15px;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+        .alert-link:hover {
+            background-color: #2980b9;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <h1>Alertas configuradas: {{ config.name }}</h1>
+    
+    <p>Hola {{ user.first_name|default:user.username }},</p>
+    
+    <p>Aquí tienes las alertas que coinciden con tu configuración:</p>
+    
+    {% for alerta in alertas %}
+    <div class="alert-item">
+        <h2 class="alert-title">{{ alerta.title }}</h2>
+        <div class="alert-meta">
+            <strong>Fecha:</strong> {{ alerta.presentation_date|date:"d/m/Y" }} |
+            <strong>Fuente:</strong> {{ alerta.source_type }} |
+            <strong>País:</strong> {{ alerta.country }} |
+            <strong>Institución:</strong> {{ alerta.institution }}
+        </div>
+        <div class="alert-desc">
+            {{ alerta.description|truncatewords:50 }}
+        </div>
+        <a href="{{ alerta.source_url }}" class="alert-link" target="_blank">Ver más</a>
+    </div>
+    {% endfor %}
+    
+    <div class="footer">
+        <p>Este correo fue enviado desde la plataforma de monitoreo de alertas.</p>
+        <p>Si deseas modificar tus configuraciones, inicia sesión en la plataforma.</p>
+    </div>
+</body>
+</html>
+
+{# alertas/templates/alertas/email/alert_email_plain.html #}
+Alertas configuradas: {{ config.name }}
+
+Hola {{ user.first_name|default:user.username }},
+
+Aquí tienes las alertas que coinciden con tu configuración:
+
+{% for alerta in alertas %}
+* {{ alerta.title }}
+  Fecha: {{ alerta.presentation_date|date:"d/m/Y" }}
+  Fuente: {{ alerta.source_type }}
+  País: {{ alerta.country }}
+  Institución: {{ alerta.institution }}
+  
+  {{ alerta.description|truncatewords:30 }}
+  
+  URL: {{ alerta.source_url }}
+
+{% endfor %}
+
+---
+Este correo fue enviado desde la plataforma de monitoreo de alertas.
+Si deseas modificar tus configuraciones, inicia sesión en la plataforma.

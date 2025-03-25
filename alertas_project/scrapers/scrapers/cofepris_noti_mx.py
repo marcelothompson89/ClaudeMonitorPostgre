@@ -64,10 +64,10 @@ async def scrape_cofepris_noti_mx():
                     'title': title,
                     'description': title,
                     'source_url': source_url,
-                    'source_type': "COFEPRIS",
+                    'source_type': "Ejecutivo",
                     'category': "Noticias",
                     'country': "México",
-                    'institution': "COFEPRIS",
+                    'institution': "COFEPRIS México",
                     'presentation_date': presentation_date,
                 }
 

@@ -145,7 +145,7 @@ async def scrape_minsalud_resoluciones_co():
                     "title": title,
                     "description": f"Resolución {year} - {description}",
                     "source_url": url,
-                    "source_type": "Ministerio Salud Resoluciones Colombia",
+                    "source_type": "Ejecutivo",
                     "country": "Colombia",
                     "category": "Resoluciones",
                     "presentation_date": extracted_date,

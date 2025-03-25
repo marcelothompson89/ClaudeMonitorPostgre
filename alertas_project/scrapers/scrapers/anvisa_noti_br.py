@@ -78,7 +78,7 @@ async def scrape_anvisa_noti_br():
                     item = {
                         'title': titulo,
                         'description':subtitulo + "|" + descripcion,
-                        'source_type': "ANVISA Noticias",
+                        'source_type': "Ejecutivo",
                         'category': "Noticias",
                         'country': "Brasil",
                         'source_url': url_completa,
@@ -86,7 +86,7 @@ async def scrape_anvisa_noti_br():
                         'metadata': {
                             'tags': etiquetas
                         },
-                        'institution': "ANVISA"
+                        'institution': "ANVISA Brasil"
                     }
                     items.append(item)
 

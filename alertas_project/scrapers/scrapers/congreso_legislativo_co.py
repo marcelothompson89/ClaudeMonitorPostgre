@@ -62,8 +62,8 @@ async def scrape_camara_proyectos_co():
                             f"Origen: {origen}\n"
                             f"Legislatura: {legislatura}"
                         ),
-                        'source_type': "Proyectos de Ley",
-                        'category': "Legislación",
+                        'source_type': "Legislativo",
+                        'category': "Proyecto de Ley",
                         'country': "Colombia",
                         'source_url': proyecto_url,  # URL absoluto
                         'presentation_date': _parse_date(legislatura),
@@ -71,7 +71,7 @@ async def scrape_camara_proyectos_co():
                             'numero_camara': numero_camara,
                             'numero_senado': numero_senado
                         },
-                        'institution': "Cámara de Representantes"
+                        'institution': "Congreso Colombia"
                     }
                     items.append(item)
 

@@ -63,15 +63,15 @@ async def scrape_minsalud_noti_ar():
                     item = {
                         'title': titulo,
                         'description': descripcion,
-                        'source_type': "Argentina.gob.ar",
-                        'category': "Noticias de Salud",
+                        'source_type': "Ejecutivo",
+                        'category': "Noticias",
                         'country': "Argentina",
                         'source_url': url_completa,
                         'presentation_date': fecha_publicacion,
                         'metadata': {
                             'image_url': imagen_url
                         },
-                        'institution': "Ministerio de Salud"
+                        'institution': "Ministerio de Salud Argentina"
                     }
                     items.append(item)
 

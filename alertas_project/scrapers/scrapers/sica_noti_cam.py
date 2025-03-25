@@ -193,11 +193,11 @@ async def scrape_sica_noticias_cam():
                         "title": title.strip(),
                         "description": description.strip(),
                         "source_url": news_url,
-                        "source_type": "sica_noticias",
+                        "source_type": "SICA",
                         "country": "Centroamérica",
                         "presentation_date": fecha,
                         "category": "Noticias",
-                        "institution": institution,
+                        "institution": "Sistema de la Integración Centroamericana",
                         "metadata": json.dumps({"tipo": "Noticia SICA"})
                     }
                     

@@ -77,15 +77,15 @@ async def scrape_minsa_noticias_pe():
                         "title": title,
                         "description": description,
                         "source_url": url,
-                        "source_type": "minsa_noticias_pe",
+                        "source_type": "Ejecutivo",
                         "country": "Perú",
                         "presentation_date": fecha,
                         "category": "Noticias",
-                        "institution": "minsa_noticias_pe",
+                        "institution": "Ministerio de Salud Perú",
                         "metadata": json.dumps({
                             "imagen": img_data,
-                            "tipo": "Noticia MINSA",
-                            "institucion": "MINSA"
+                            "tipo": "Noticia Ministerio de Salud Perú",
+                            "institucion": "Ministerio de Salud Perú"
                         })
                     }
                     

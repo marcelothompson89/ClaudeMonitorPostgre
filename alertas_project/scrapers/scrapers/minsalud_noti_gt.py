@@ -67,10 +67,10 @@ async def scrape_minsalud_noti_gt():
                         "title": title,
                         "description": descripcion,
                         "source_url": noticia_url,
-                        "source_type": "mspas_noticias_gt",
+                        "source_type": "Ejecutivo",
                         "country": "Guatemala",
                         "presentation_date": fecha,
-                        "category": categoria,
+                        "category": "Noticias",
                         "institution": "Ministerio de Salud Guatemala",
                         "metadata": json.dumps({"imagen": imagen_url})
                     }

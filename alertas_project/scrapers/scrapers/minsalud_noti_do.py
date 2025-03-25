@@ -47,7 +47,7 @@ async def scrape_minsalud_noti_do():
                         "title": title,
                         "description": title,
                         "source_url": news_url,
-                        "source_type": "msp_noticias_do",
+                        "source_type": "Ejecutivo",
                         "country": "República Dominicana",
                         "presentation_date": fecha,
                         "category": "Noticias",

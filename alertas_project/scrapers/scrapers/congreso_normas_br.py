@@ -86,7 +86,7 @@ async def scrape_congreso_normas_br():
                     'title': title,
                     'description': f"{description}\nOrigen: {origin}",
                     'source_url': source_url,
-                    'source_type': "Congreso Brasil",
+                    'source_type': "Legislativo",
                     'category': "Normas",
                     'country': "Brasil",
                     'institution': "Congreso Brasil",

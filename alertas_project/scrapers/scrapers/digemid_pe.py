@@ -44,11 +44,11 @@ async def scrape_digemid_noticias():
                         'title': titulo,
                         'description': descripcion,
                         'source_url': url_noticia,
-                        'source_type': 'noticia',
+                        'source_type': 'Ejecutivo',
                         'country': 'Perú',
-                        'category': categoria,
+                        'category': 'Noticias',
                         'presentation_date': fecha,
-                        'institution': 'Digemid_Perú'
+                        'institution': 'DIGEMID Perú'
                     }
                     
                     items.append(item)

@@ -70,12 +70,12 @@ async def scrape_minsalud_noticias_br():
                     item = {
                         'title': titulo,
                         'description': f"{descripcion} | {' | '.join(etiquetas)}",
-                        'source_type': "Ministério da Saúde",
+                        'source_type': "Ejecutivo",
                         'category': "Noticias",
                         'country': "Brasil",
                         'source_url': url_completa,
                         'presentation_date': fecha_hora,  # Se pasa el objeto datetime directamente
-                        'institution': "Ministério da Saúde"
+                        'institution': "Ministério da Saúde Brasil"
                     }
                     items.append(item)
 

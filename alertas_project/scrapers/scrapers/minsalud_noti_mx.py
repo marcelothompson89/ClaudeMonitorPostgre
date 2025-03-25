@@ -64,7 +64,7 @@ async def scrape_minsalud_noti_mx():
                     'title': title,
                     'description': title,
                     'source_url': source_url,
-                    'source_type': "Ministerio de Salud México",
+                    'source_type': "Ejecutivo",
                     'category': "Noticias",
                     'country': "México",
                     'institution': "Ministerio de Salud México",

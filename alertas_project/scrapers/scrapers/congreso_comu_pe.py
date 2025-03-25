@@ -52,15 +52,15 @@ async def scrape_congreso_comu_pe():
                     item = {
                         'title': titulo,
                         'description': descripcion_texto,
-                        'source_type': 'Congreso Perú',
+                        'source_type': 'Legislativo',
                         'country': 'Perú',
                         'source_url': enlace,
                         'presentation_date': fecha,
-                        'category': "Comunicaciones",
+                        'category': "Noticias",
                         'metadata': {
                             'fecha_completa': fecha_str
                         },
-                        'institution': 'Congreso_Perú'
+                        'institution': 'Congreso Perú'
                     }
                     
                     items.append(item)

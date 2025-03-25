@@ -59,10 +59,10 @@ async def scrape_el_universal_salud_mx():
                         'title': title,
                         'description': description,
                         'source_url': source_url,
-                        'source_type': "El Universal periódico",
+                        'source_type': "Periódico",
                         'category': "Noticias",
                         'country': "México",
-                        'institution': "El Universal",
+                        'institution': "El Universal México",
                         'presentation_date': presentation_date,
                     }
 

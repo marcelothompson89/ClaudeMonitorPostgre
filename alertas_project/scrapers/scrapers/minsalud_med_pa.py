@@ -52,10 +52,10 @@ async def scrape_minsa_med_pa():
                         "title": title,
                         "description": title,
                         "source_url": alerta_url,
-                        "source_type": "minsa_nota_medicamentos_pa",
+                        "source_type": "Ejecutivo",
                         "country": "Panamá",
                         "presentation_date": fecha,
-                        "category": "Alertas",
+                        "category": "Notas medicamentos",
                         "institution": "Ministerio de Salud Panamá",
                         "metadata": json.dumps({"tipo": "Nota de Seguridad"})
                     }

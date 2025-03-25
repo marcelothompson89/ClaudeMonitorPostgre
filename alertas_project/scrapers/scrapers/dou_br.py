@@ -61,7 +61,7 @@ async def scrape_dou_br():
                         'title': title,
                         'description': description,
                         'source_url': full_url,
-                        'source_type': "Diário Oficial da União",
+                        'source_type': "Ejecutivo",
                         'category': "Normas",
                         'country': "Brasil",
                         'institution': "Diário Oficial da União",

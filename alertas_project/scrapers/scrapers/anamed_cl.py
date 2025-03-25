@@ -45,8 +45,8 @@ async def scrape_anamed_cl():
                 item = {
                     'title': cols[3].get_text(strip=True),
                     'description': cols[3].get_text(strip=True),
-                    'source_type': cols[1].get_text(strip=True),
-                    'category': cols[2].get_text(strip=True),
+                    'source_type': "Ejecutivo",
+                    'category': "Normas",
                     'country': 'Chile',
                     'source_url': alerta_link.get('href') if alerta_link else None,
                     'presentation_date': fecha,
@@ -54,7 +54,7 @@ async def scrape_anamed_cl():
                         'nota_url': nota_link.get('href') if nota_link else None,
                         'publicacion_url': publicacion_link.get('href') if publicacion_link else None
                     },
-                    'institution': 'Anamed_Chile'
+                    'institution': 'ANAMED Chile'
                 }
                 items.append(item)
             

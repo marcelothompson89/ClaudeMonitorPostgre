@@ -84,7 +84,7 @@ async def scrape_boletin_oficial_ar():
                         'title': titulo,
                         'description': descripcion,
                         'source_url': source_url,
-                        'source_type': "Boletín Oficial Argentina",
+                        'source_type': "Ejecutivo",
                         'category': "Normas",
                         'country': "Argentina",
                         'institution': "Boletín Oficial Argentina",

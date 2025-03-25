@@ -26,6 +26,12 @@
                                     <i class="bi bi-tags-fill"></i> Mis Palabras Clave
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'email_alert_configs' %}active{% endif %}" 
+                                href="{% url 'alertas:email_alert_configs' %}">
+                                    <i class="bi bi-envelope"></i> Alertas por correo
+                                </a>
+                            </li>
                         </ul>
                         <div class="d-flex">
                             <span class="navbar-text">

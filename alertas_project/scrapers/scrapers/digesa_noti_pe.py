@@ -159,10 +159,10 @@ async def scrape_digesa_noticias_pe():
                                                     'description': titulo,
                                                     'country': 'Perú',
                                                     'source_url': noticia_url,
-                                                    'source_type': 'DIGESA',
+                                                    'source_type': 'Ejecutivo',
                                                     'presentation_date': fecha,
                                                     'category': 'Noticias',
-                                                    'institution': 'DIGESA_noticias_pe',
+                                                    'institution': 'DIGESA Perú',
                                                     'metadata': json.dumps(metadata)
                                                 }
                                                 

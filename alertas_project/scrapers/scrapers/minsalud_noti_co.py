@@ -71,10 +71,10 @@ async def scrape_minsalud_noticias_co():
                     'title': title,
                     'description': description,
                     'source_url': source_url,
-                    'source_type': "Ministerio de Salud Noticias",
+                    'source_type': "Ejecutivo",
                     'category': "Noticias",
                     'country': "Colombia",
-                    'institution': "Ministerio de Salud y Protección Social",
+                    'institution': "Ministerio de Salud Colombia",
                     'presentation_date': presentation_date,
                 }
 

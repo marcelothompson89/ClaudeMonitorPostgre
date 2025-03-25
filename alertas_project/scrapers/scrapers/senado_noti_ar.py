@@ -51,7 +51,7 @@ async def scrape_senado_noti_ar():
                     item = {
                         'title': titulo,
                         'description': titulo,  # En este caso la descripción es el mismo título
-                        'source_type': "Senado de la Nación Argentina",
+                        'source_type': "Legislativo",
                         'category': "Noticias",
                         'country': "Argentina",
                         'source_url': url_completa,

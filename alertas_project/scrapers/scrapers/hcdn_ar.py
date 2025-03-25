@@ -65,8 +65,8 @@ async def scrape_hcdn_ar():
                     item = {
                         'title': titulo_texto,
                         'description': final_description,
-                        'source_type': "Diputados",
-                        'category': "Proyectos",
+                        'source_type': "Legislativo",
+                        'category': "Proyecto de ley",
                         'country': "Argentina",
                         'source_url': pdf_url,
                         'presentation_date': _parse_date(meta_dict.get("Fecha")),
@@ -74,7 +74,7 @@ async def scrape_hcdn_ar():
                             'expediente': meta_dict.get("Expediente Diputados"),
                             'image_url': None,  # Si hubiera una imagen relacionada
                         },
-                        'institution': "HCDN"
+                        'institution': "Cámara de Diputados Argentina"
                     }
                     items.append(item)
 

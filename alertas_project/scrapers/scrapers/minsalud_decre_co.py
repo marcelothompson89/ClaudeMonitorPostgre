@@ -146,11 +146,11 @@ async def scrape_minsalud_decre_co():
                     "title": title,
                     "description": f"Decreto {year} - {description}",
                     "source_url": url,
-                    "source_type": "Ministerio Salud Decretos Colombia",
+                    "source_type": "Ejecutivo",
                     "country": "Colombia",
-                    "category": "Decretos",
+                    "category": "Normas",
                     "presentation_date": extracted_date,
-                    "institution": "Ministerio Salud Colombia",
+                    "institution": "Ministerio de Salud Colombia",
                     "metadata": json.dumps({
                         "año": year,
                         "categoría": category

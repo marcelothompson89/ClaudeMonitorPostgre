@@ -43,11 +43,11 @@ async def scrape_diputados_noti_cl():
                             "title": title,
                             "description": description,
                             "source_url": url,
-                            "source_type": "diputados_noticias_cl",
+                            "source_type": "Legislativo",
                             "country": "Chile",
                             "presentation_date": date, 
                             'category': "Noticias",
-                            "institution": 'diputados_noticias_cl',
+                            "institution": 'Cámara de Diputados Chile',
                             "metadata": {
                                 "image_url": img_url
                             }

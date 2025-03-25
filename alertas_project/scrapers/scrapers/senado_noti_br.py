@@ -63,7 +63,7 @@ async def scrape_senado_noticias_br():
                     item = {
                         'title': titulo,
                         'description': titulo,
-                        'source_type': "Senado Brasil",
+                        'source_type': "Legislativo",
                         'category': "Noticias",
                         'country': "Brasil",
                         'source_url': url_completa,

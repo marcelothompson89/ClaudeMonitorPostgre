@@ -112,22 +112,7 @@
             <div class="card mb-3 alerta-card">
                 <div class="card-body p-0">
                     <div class="row g-0">
-                        <!-- Espacio para logo/imagen de la institución - SOLUCIÓN MEJORADA -->
-                        <div class="col-auto institution-logo">
-                            <div class="logo-placeholder">
-                                {% if alerta.institution %}
-                                    {% with institution_slug=alerta.institution|slugify %}
-                                    <img src="{% static 'img/instituciones/'|add:institution_slug|add:'.jpg' %}" 
-                                         alt="{{ alerta.institution }}" 
-                                         class="institution-logo-img {% if 'brasil' in institution_slug %}logo-national-emblem{% elif 'diario-oficial' in institution_slug or 'gobierno' in institution_slug or 'ministerio' in institution_slug %}logo-emblem{% endif %}"
-                                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <span class="logo-text" style="display: none;">{{ alerta.institution|slice:":2" }}</span>
-                                    {% endwith %}
-                                {% else %}
-                                    <span class="logo-text">?</span>
-                                {% endif %}
-                            </div>
-                        </div>
+                        <!-- Se eliminó el espacio para logo/imagen de la institución -->
                         
                         <!-- Contenido principal de la alerta -->
                         <div class="col">

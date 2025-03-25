@@ -1,0 +1,143 @@
+{% extends "alertas/base_alertas.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    {% if editing %}
+                        <h2 class="mb-0">Editar configuración de alerta</h2>
+                    {% else %}
+                        <h2 class="mb-0">Nueva configuración de alerta por correo</h2>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                                {{ form.name|add_class:"form-control" }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                                {{ form.email|add_class:"form-control" }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.frequency.id_for_label }}" class="form-label">{{ form.frequency.label }}</label>
+                                {{ form.frequency|add_class:"form-select" }}
+                                {% if form.frequency.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.frequency.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.days_back.id_for_label }}" class="form-label">{{ form.days_back.label }}</label>
+                                {{ form.days_back|add_class:"form-control" }}
+                                <small class="text-muted">Número de días hacia atrás para buscar alertas</small>
+                                {% if form.days_back.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.days_back.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check mt-4">
+                                    {{ form.active|add_class:"form-check-input" }}
+                                    <label for="{{ form.active.id_for_label }}" class="form-check-label">{{ form.active.label }}</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        <h4>Filtros</h4>
+                        <p class="text-muted">Configura los filtros para las alertas que quieres recibir. Si no seleccionas un filtro, se incluirán todas las opciones.</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.source_type.id_for_label }}" class="form-label">{{ form.source_type.label }}</label>
+                                {{ form.source_type|add_class:"form-select" }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.category.id_for_label }}" class="form-label">{{ form.category.label }}</label>
+                                {{ form.category|add_class:"form-select" }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">{{ form.country.label }}</label>
+                                {{ form.country|add_class:"form-select" }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.institution.id_for_label }}" class="form-label">{{ form.institution.label }}</label>
+                                {{ form.institution|add_class:"form-select" }}
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        <h4>Palabras clave</h4>
+                        <p class="text-muted">Selecciona las palabras clave que quieres utilizar para filtrar las alertas. Si no seleccionas ninguna, se incluirán todas las alertas.</p>
+                        
+                        <div class="mb-3">
+                            <div class="keywords-container">
+                                {% for keyword in form.keywords %}
+                                    <div class="form-check form-check-inline">
+                                        {{ keyword.tag }}
+                                        <label for="{{ keyword.id_for_label }}" class="form-check-label">{{ keyword.choice_label }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.keywords.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.keywords.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'alertas:email_alert_configs' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

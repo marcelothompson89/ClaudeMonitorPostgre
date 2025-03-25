@@ -56,7 +56,7 @@ async def scrape_ministerio_salud_cr():
                         "title": title,
                         "description": title,
                         "source_url": noticia_url,
-                        "source_type": "ministerio_salud_cr",
+                        "source_type": "Ejecutivo",
                         "country": "Costa Rica",
                         "presentation_date": fecha,
                         "category": "Noticias",

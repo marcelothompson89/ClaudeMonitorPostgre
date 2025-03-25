@@ -66,7 +66,7 @@ async def scrape_proceso_mx():
                     'title': title,
                     'description': description,
                     'source_url': source_url,
-                    'source_type': "Periodico El Proceso",
+                    'source_type': "Periódico",
                     'category': "Noticias",
                     'country': "México",
                     'institution': "Periodico El Proceso",

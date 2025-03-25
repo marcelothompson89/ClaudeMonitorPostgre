@@ -1,4 +1,203 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Función mejorada para asegurar que los iconos Bootstrap se muestran correctamente
+    function fixBootstrapIcons() {
+        // Seleccionar todos los iconos Bootstrap
+        const icons = document.querySelectorAll('.bi');
+        
+        icons.forEach(icon => {
+            // Aplicar estilos importantes para asegurar la visualización
+            icon.style.display = 'inline-block';
+            icon.style.lineHeight = '1';
+            icon.style.verticalAlign = 'middle';
+            
+            // Verificar si el icono es visible
+            if (window.getComputedStyle(icon).display === 'none') {
+                console.log('Corrigiendo visibilidad de icono:', icon);
+                icon.style.display = 'inline-block';
+            }
+            
+            // Verificar si el icono tiene un contenedor padre que sea círculo
+            const parentCircle = icon.closest('.icon-bg, .icon-circle');
+            if (parentCircle) {
+                // Asegurar que el contenedor esté correctamente configurado
+                parentCircle.style.display = 'inline-flex';
+                parentCircle.style.alignItems = 'center';
+                parentCircle.style.justifyContent = 'center';
+                parentCircle.style.borderRadius = '50%';
+                parentCircle.style.position = 'relative';
+                
+                // Centrar el icono dentro del círculo
+                icon.style.position = 'absolute';
+                icon.style.top = '50%';
+                icon.style.left = '50%';
+                icon.style.transform = 'translate(-50%, -50%)';
+            }
+        });
+        
+        // Mejorar los logos institucionales
+        const institutionLogos = document.querySelectorAll('.institution-logo-img');
+        institutionLogos.forEach(img => {
+            // Si la imagen ya está cargada
+            if (img.complete && img.naturalHeight !== 0) {
+                adjustLogoImage(img);
+            } else {
+                // Si la imagen aún no está cargada
+                img.addEventListener('load', function() {
+                    adjustLogoImage(img);
+                });
+            }
+            
+            // Manejo de errores de carga
+            img.addEventListener('error', function() {
+                handleLogoImageError(img);
+            });
+        });
+    }
+
+    // Función para corregir los círculos azules alargados y ocultar los números
+    function fixCirclesAndNumbers() {
+        // Primero, asegurémonos de que todos los contenedores de íconos tengan dimensiones cuadradas
+        const iconContainers = document.querySelectorAll('.feature-icon .icon-bg, .feature-icon .rounded-circle, .feature-card .feature-icon > span, .feature-card .feature-icon > div');
+        
+        iconContainers.forEach(container => {
+            // Aplicar dimensiones cuadradas
+            container.style.width = '80px';
+            container.style.height = '80px';
+            container.style.minWidth = '80px';
+            container.style.maxWidth = '80px';
+            container.style.borderRadius = '50%';
+            container.style.display = 'flex';
+            container.style.justifyContent = 'center';
+            container.style.alignItems = 'center';
+            container.style.backgroundColor = '#0d6efd';
+            container.style.color = 'white';
+            container.style.position = 'relative';
+            container.style.overflow = 'hidden';
+            
+            // Importante: añadir aspect-ratio para asegurar forma circular
+            container.style.aspectRatio = '1 / 1';
+        });
+        
+        // Asegurar que los íconos dentro de los círculos estén bien posicionados
+        const icons = document.querySelectorAll('.feature-icon i, .feature-icon .bi, .feature-card .feature-icon i');
+        
+        icons.forEach(icon => {
+            icon.style.position = 'absolute';
+            icon.style.top = '50%';
+            icon.style.left = '50%';
+            icon.style.transform = 'translate(-50%, -50%)';
+            icon.style.fontSize = '2rem';
+            icon.style.margin = '0';
+            icon.style.padding = '0';
+            icon.style.lineHeight = '1';
+        });
+        
+        // Corregir los círculos en la sección "Cómo Funciona"
+        const howItWorksCircles = document.querySelectorAll('#how-it-works .step-icon .icon-circle, #how-it-works .icon-bg, #how-it-works .rounded-circle');
+        
+        howItWorksCircles.forEach(circle => {
+            circle.style.width = '60px';
+            circle.style.height = '60px';
+            circle.style.borderRadius = '50%';
+            circle.style.backgroundColor = '#0d6efd';
+            circle.style.color = 'white';
+            circle.style.display = 'flex';
+            circle.style.alignItems = 'center';
+            circle.style.justifyContent = 'center';
+            circle.style.margin = '0 auto 1rem auto';
+            circle.style.aspectRatio = '1 / 1';
+        });
+        
+        // Ocultar los números delante de los títulos en "Cómo Funciona"
+        const stepNumbers = document.querySelectorAll('#how-it-works .step-number, .how-it-works .step-number');
+        
+        stepNumbers.forEach(number => {
+            number.style.display = 'none';
+        });
+        
+        // Corregir específicamente los elementos que tienen clases compuestas
+        const composedClassElements = document.querySelectorAll('[class*="feature-icon bg-primary"], [class*="icon-bg rounded-circle"]');
+        
+        composedClassElements.forEach(element => {
+            element.style.width = '80px';
+            element.style.height = '80px';
+            element.style.minWidth = '80px';
+            element.style.maxWidth = '80px';
+            element.style.borderRadius = '50%';
+            element.style.display = 'flex';
+            element.style.justifyContent = 'center';
+            element.style.alignItems = 'center';
+            element.style.backgroundColor = '#0d6efd';
+            element.style.color = 'white';
+            element.style.aspectRatio = '1 / 1';
+        });
+    }
+
+    // Función para ajustar imágenes de logos
+    function adjustLogoImage(img) {
+        // Verificar si es un tipo de logo específico
+        if (img.src.toLowerCase().includes('brasil') || 
+            img.src.toLowerCase().includes('escudo-nacional')) {
+            img.classList.add('logo-national-emblem');
+        } 
+        // Verificar proporciones
+        else if (img.naturalWidth / img.naturalHeight > 0.8) {
+            img.classList.add('logo-emblem');
+        }
+        
+        // Ajustar tamaño si la imagen es muy grande
+        if (img.naturalWidth > 100 || img.naturalHeight > 100) {
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '100%';
+            img.style.width = 'auto';
+            img.style.height = 'auto';
+        }
+    }
+
+    // Función para manejar errores de imágenes
+    function handleLogoImageError(img) {
+        img.style.display = 'none';
+        // Buscar y mostrar texto alternativo
+        const logoContainer = img.closest('.institution-logo');
+        if (logoContainer) {
+            // Crear elemento de texto alternativo si no existe
+            let textLogo = logoContainer.querySelector('.logo-text');
+            if (!textLogo) {
+                textLogo = document.createElement('div');
+                textLogo.className = 'logo-text';
+                // Extraer iniciales del nombre de la institución si está disponible
+                const institutionName = img.alt || 'IN';
+                const initials = institutionName.split(' ')
+                    .map(word => word[0])
+                    .join('')
+                    .substring(0, 2)
+                    .toUpperCase();
+                textLogo.textContent = initials;
+                logoContainer.appendChild(textLogo);
+            }
+            textLogo.style.display = 'flex';
+        }
+    }
+    
+    // Ejecutar las funciones para corregir los iconos
+    fixBootstrapIcons();
+    fixCirclesAndNumbers();
+    
+    // Ejecutar de nuevo después de un tiempo para asegurar que los recursos externos estén cargados
+    setTimeout(function() {
+        fixBootstrapIcons();
+        fixCirclesAndNumbers();
+    }, 500);
+    
+    // Ejecutar también cuando la ventana esté completamente cargada
+    window.addEventListener('load', function() {
+        fixBootstrapIcons();
+        fixCirclesAndNumbers();
+    });
+    
+    // Si hay un redimensionamiento de ventana, volver a aplicar
+    window.addEventListener('resize', fixCirclesAndNumbers);
+    
     // Smooth scrolling para los enlaces internos
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -84,67 +283,6 @@ document.addEventListener('DOMContentLoaded', function() {
             observer.observe(document.querySelector('.stats-section'));
         }
     }
-    
-    // CÓDIGO MEJORADO: Manejo de imágenes de logos institucionales
-    const institutionLogos = document.querySelectorAll('.institution-logo-img');
-    
-    // Función para manejar errores de carga de imágenes
-    function handleImageError(img) {
-        img.style.display = 'none';
-        // Buscar el elemento de texto alternativo y mostrarlo
-        const textLogo = img.nextElementSibling;
-        if (textLogo && textLogo.classList.contains('logo-text')) {
-            textLogo.style.display = 'flex';
-        }
-    }
-    
-    // Función para ajustar tamaño de imágenes
-    function adjustImageSize(img) {
-        // Si la imagen ya está cargada
-        if (img.complete && img.naturalHeight !== 0) {
-            checkImageProportions(img);
-        } else {
-            // Si la imagen aún no está cargada, esperar al evento load
-            img.addEventListener('load', function() {
-                checkImageProportions(img);
-            });
-        }
-    }
-    
-    // Verificar proporciones de la imagen y aplicar clases según corresponda
-    function checkImageProportions(img) {
-        // Si es un emblema nacional específico
-        if (img.src.includes('brasil') || img.src.includes('escudo-nacional')) {
-            img.classList.add('logo-national-emblem');
-        } 
-        // Si la imagen es más cuadrada que rectangular
-        else if (img.naturalWidth / img.naturalHeight > 0.8) {
-            img.classList.add('logo-emblem');
-        }
-        
-        // Ajustar aún más si la imagen es excesivamente grande
-        if (img.naturalWidth > 100 || img.naturalHeight > 100) {
-            // Reducir más si la imagen es muy grande
-            img.style.maxWidth = '24px';
-            img.style.maxHeight = '24px';
-        }
-    }
-    
-    // Aplicar a todas las imágenes de logos
-    institutionLogos.forEach(img => {
-        // Manejo de errores
-        img.addEventListener('error', function() {
-            handleImageError(this);
-        });
-        
-        // Ajuste de tamaño
-        adjustImageSize(img);
-        
-        // Añadir regla para forzar tamaño más pequeño a escudos nacionales
-        if (img.src.includes('brasil')) {
-            img.classList.add('logo-national-emblem');
-        }
-    });
     
     // Cambiar el texto del botón para expandir/colapsar descripción 
     const showMoreBtns = document.querySelectorAll('.show-more-btn');

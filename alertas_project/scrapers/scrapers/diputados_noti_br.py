@@ -64,7 +64,7 @@ async def scrape_diputados_noti_br():
                     item = {
                         'title': titulo,
                         'description': titulo,
-                        'source_type': "Diputados Brasil",
+                        'source_type': "Legislativo",
                         'category': "Noticias",
                         'country': "Brasil",
                         'source_url': url_completa,

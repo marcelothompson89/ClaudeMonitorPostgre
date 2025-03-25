@@ -77,7 +77,7 @@ async def scrape_anvisa_normas_br():
                         item = {
                             'title': titulo,
                             'description': descripcion,
-                            'source_type': "ANVISA",
+                            'source_type': "Ejecutivo",
                             'category': "Normas",
                             'country': "Brasil",
                             'source_url': url_completa,
@@ -86,7 +86,7 @@ async def scrape_anvisa_normas_br():
                                 'nota_url': nota_url.get('href') if nota_url else None,
                                 'publicacion_url': publicacion_url.get('href') if publicacion_url else None
                             },
-                            'institution': "ANVISA"
+                            'institution': "ANVISA Brasil"
                         }
                         items.append(item)
 

@@ -68,15 +68,15 @@ async def scrape_minsa_normas_pe():
                         "title": title,
                         "description": description,
                         "source_url": pdf_url,
-                        "source_type": "minsa_normas_pe",
+                        "source_type": "Ejecutivo",
                         "country": "Perú",
                         "presentation_date": fecha,
                         "category": "Normas",
-                        "institution": "minsa_normas_pe",
+                        "institution": "Ministerio de Salud Perú",
                         "metadata": json.dumps({
                             "url_detalle": url,
                             "tipo": "Norma Legal MINSA",
-                            "institucion": "MINSA"
+                            "institucion": "Ministerio de Salud Perú"
                         })
                     }
                     

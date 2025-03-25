@@ -1,5 +1,15 @@
 /* Estilos base para el sistema de alertas */
 
+/* Estilos generales */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+}
+
 /* Estilos para el sidebar de filtros */
 .filter-section {
     margin-bottom: 1.5rem;
@@ -24,35 +34,36 @@
     transform: translateY(-2px);
 }
 
-/* Ajustes para el tamaño del logo institucional - SOLUCIÓN MEJORADA */
+/* Ajustes para el tamaño del logo institucional */
 .institution-logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 60px; /* Reducido de 70px */
-    min-width: 60px; /* Asegura el ancho mínimo */
-    height: 100%;
-    min-height: 60px; /* Reducido de 70px */
+    width: 60px;
+    min-width: 60px;
+    height: 60px;
+    min-height: 60px;
     background-color: #f8f9fa;
     border-right: 1px solid #e5e5e5;
     padding: 5px;
+    overflow: hidden;
 }
 
 .logo-placeholder {
-    width: 40px; /* Reducido de 50px */
-    height: 40px; /* Reducido de 50px */
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 3px; /* Reducido de 5px */
+    padding: 3px;
     background-color: #f8f9fa;
     overflow: hidden;
     border-radius: 4px;
 }
 
 .institution-logo-img {
-    max-width: 32px; /* Reducido de 40px */
-    max-height: 32px; /* Reducido de 40px */
+    max-width: 100%;
+    max-height: 100%;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -60,18 +71,18 @@
 
 /* Para logos con forma más cuadrada como escudos o emblemas */
 .logo-emblem {
-    max-width: 28px; /* Reducido de 35px */
-    max-height: 28px; /* Reducido de 35px */
+    max-width: 28px;
+    max-height: 28px;
 }
 
 /* Clase especial para escudos nacionales */
 .logo-national-emblem {
-    max-width: 24px; /* Aún más pequeño para escudos nacionales */
+    max-width: 24px;
     max-height: 24px;
 }
 
 .logo-text {
-    font-size: 1rem; /* Reducido ligeramente */
+    font-size: 1rem;
     font-weight: bold;
     text-transform: uppercase;
     display: flex;
@@ -172,6 +183,170 @@
     border-color: #dee2e6;
 }
 
+/* ------------------------- */
+/* ESTILOS PARA LOS ICONOS Y CARACTERÍSTICAS */
+/* ------------------------- */
+
+/* Estilos para iconos en la barra de navegación */
+.navbar-nav .nav-link i,
+.navbar-brand i {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 0.25rem;
+}
+
+/* Correcciones para los iconos Bootstrap */
+.bi {
+    display: inline-block !important;
+    line-height: 1 !important;
+    vertical-align: -0.125em !important;
+    width: 1em;
+    height: 1em;
+    font-size: inherit;
+}
+
+/* Corrección específica para los círculos azules alargados */
+.feature-card .feature-icon,
+.feature-section .feature-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+/* Asegurarnos de que los elementos sean círculos, no elipses */
+.feature-icon .icon-bg, 
+.feature-icon .rounded-circle,
+.feature-icon span,
+.feature-card .feature-icon > span,
+.feature-card .feature-icon > div {
+    width: 80px !important;
+    height: 80px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background-color: #0d6efd !important;
+    color: white !important;
+    overflow: hidden !important;
+    position: relative !important;
+    /* Evitar que se estiren horizontalmente */
+    max-width: 80px !important;
+    min-width: 80px !important;
+    aspect-ratio: 1 / 1 !important;
+}
+
+/* Estilos específicos para los íconos dentro de los círculos */
+.feature-icon i,
+.feature-icon .bi,
+.feature-card .feature-icon i,
+.feature-card .feature-icon .bi {
+    font-size: 2rem !important;
+    line-height: 1 !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Corregir los círculos en la sección "Cómo Funciona" */
+#how-it-works .step-icon .icon-circle,
+#how-it-works .icon-bg,
+#how-it-works .rounded-circle {
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    background-color: #0d6efd !important;
+    color: white !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto 1rem auto !important;
+    aspect-ratio: 1 / 1 !important;
+}
+
+/* Ocultar los números delante de los títulos en "Cómo Funciona" */
+#how-it-works .step-number,
+.how-it-works .step-number {
+    display: none !important;
+}
+
+/* Corrección para la sección "Cómo Funciona" de index.html */
+.how-it-works .col-md-6.d-flex .step-number {
+    display: none !important;
+}
+
+/* Estilo específico para las características principales con efectos */
+.feature-section {
+    padding: 3rem 0;
+}
+
+.feature-card {
+    border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.feature-icon {
+    margin-bottom: 1.5rem;
+    text-center: center;
+}
+
+.feature-icon i {
+    font-size: 2rem;
+    vertical-align: middle;
+}
+
+/* Estilos para la sección "Cómo Funciona" */
+#how-it-works .step-icon {
+    text-align: center;
+}
+
+#how-it-works .card {
+    transition: transform 0.3s ease;
+}
+
+#how-it-works .card:hover {
+    transform: translateY(-5px);
+}
+
+/* Fix importante para asegurar que los iconos siempre sean visibles */
+i[class^="bi-"] {
+    display: inline-block !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+}
+
+/* Asegurarse de que los contenedores de iconos circulares sean realmente circulares */
+.rounded-circle {
+    border-radius: 50% !important;
+}
+
+/* Asegurarse de que los elementos estilizados en HTML directo también se apliquen */
+[class*="feature-icon bg-primary"],
+[class*="icon-bg rounded-circle"] {
+    width: 80px !important;
+    height: 80px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background-color: #0d6efd !important;
+    color: white !important;
+    max-width: 80px !important;
+    min-width: 80px !important;
+    aspect-ratio: 1 / 1 !important;
+}
+
 /* Estilos responsivos */
 @media (max-width: 768px) {
     .alerta-metadata .row {
@@ -189,5 +364,38 @@
     
     .country-badge {
         margin-top: 0.5rem;
+    }
+    
+    .icon-bg, .icon-circle {
+        width: 60px !important;
+        height: 60px !important;
+    }
+    
+    .feature-icon i, .step-icon i {
+        font-size: 1.5rem;
+    }
+    
+    .feature-icon .icon-bg, 
+    .feature-icon .rounded-circle,
+    .feature-icon span,
+    .feature-card .feature-icon > span,
+    .feature-card .feature-icon > div {
+        width: 60px !important;
+        height: 60px !important;
+        min-width: 60px !important;
+    }
+    
+    .feature-icon i,
+    .feature-icon .bi,
+    .feature-card .feature-icon i,
+    .feature-card .feature-icon .bi {
+        font-size: 1.5rem !important;
+    }
+    
+    #how-it-works .step-icon .icon-circle,
+    #how-it-works .icon-bg,
+    #how-it-works .rounded-circle {
+        width: 50px !important;
+        height: 50px !important;
     }
 }

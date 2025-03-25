@@ -47,7 +47,7 @@ async def scrape_farmaydrogas_pa():
                         "title": title,
                         "description": title,
                         "source_url": pdf_url,
-                        "source_type": "farmaydrogas_pa",
+                        "source_type": "Ejecutivo",
                         "country": "Panamá",
                         "presentation_date": fecha,
                         "category": "Resoluciones",

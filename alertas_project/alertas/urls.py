@@ -13,4 +13,11 @@ urlpatterns = [
     path('mis-palabras-clave/<int:keyword_id>/toggle/', views.toggle_keyword_status, name='toggle_keyword'),
     path('mis-palabras-clave/<int:keyword_id>/eliminar/', views.delete_keyword, name='delete_keyword'),
     path('toggle-filtro-keywords/', views.toggle_keyword_filter, name='toggle_keyword_filter'),
+
+    # URLs para la configuración de alertas por correo
+    path('email-alerts/', views.email_alert_config_list, name='email_alert_configs'),
+    path('email-alerts/new/', views.email_alert_config_create, name='email_alert_config_create'),
+    path('email-alerts/<int:pk>/edit/', views.email_alert_config_edit, name='email_alert_config_edit'),
+    path('email-alerts/<int:pk>/delete/', views.email_alert_config_delete, name='email_alert_config_delete'),
+    path('email-alerts/<int:pk>/send/', views.send_email_alert, name='send_email_alert'),
 ]

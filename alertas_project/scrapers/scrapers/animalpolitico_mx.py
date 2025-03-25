@@ -70,10 +70,10 @@ async def scrape_animal_politico_salud():
                         'title': description,
                         'description': description,
                         'source_url': source_url,
-                        'source_type': "Animal Político Periódico",
+                        'source_type': "Periódico",
                         'category': "Noticias",
                         'country': "México",
-                        'institution': "Animal Político",
+                        'institution': "Animal Político México",
                         'presentation_date': presentation_date,
                     }
 

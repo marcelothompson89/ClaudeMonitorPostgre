@@ -1,7 +1,7 @@
 # alertas/forms.py
 from django import forms
 from django.contrib.auth.models import User
-from .models import Alerta, Keyword
+from .models import Alerta, Keyword, EmailAlertConfig
 
 class AlertaFilterForm(forms.Form):
     user = forms.ModelChoiceField(
@@ -82,3 +82,39 @@ class KeywordForm(forms.ModelForm):
     class Meta:
         model = Keyword
         fields = ['word']
+
+# Envio de Alertas por mail formulario
+class EmailAlertConfigForm(forms.ModelForm):
+    # Listas desplegables para los campos que deben permitir selección
+    source_type = forms.ChoiceField(required=False, label="Tipo de fuente")
+    category = forms.ChoiceField(required=False, label="Categoría")
+    country = forms.ChoiceField(required=False, label="País")
+    institution = forms.ChoiceField(required=False, label="Institución")
+    
+    class Meta:
+        model = EmailAlertConfig
+        fields = ['name', 'active', 'keywords', 'source_type', 'category', 
+                  'country', 'institution', 'days_back', 'email', 'frequency']
+        widgets = {
+            'keywords': forms.CheckboxSelectMultiple(),
+            'days_back': forms.NumberInput(attrs={'min': 1, 'max': 30}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        if user:
+            # Filtrar las keywords del usuario
+            self.fields['keywords'].queryset = Keyword.objects.filter(user=user, active=True)
+        
+        # Obtener opciones únicas de la base de datos para los filtros
+        source_types = [('', '--------')] + [(st, st) for st in Alerta.objects.values_list('source_type', flat=True).distinct().order_by('source_type')]
+        categories = [('', '--------')] + [(c, c) for c in Alerta.objects.values_list('category', flat=True).distinct().order_by('category')]
+        countries = [('', '--------')] + [(c, c) for c in Alerta.objects.values_list('country', flat=True).distinct().order_by('country')]
+        institutions = [('', '--------')] + [(i, i) for i in Alerta.objects.values_list('institution', flat=True).distinct().order_by('institution')]
+        
+        self.fields['source_type'].choices = source_types
+        self.fields['category'].choices = categories
+        self.fields['country'].choices = countries
+        self.fields['institution'].choices = institutions

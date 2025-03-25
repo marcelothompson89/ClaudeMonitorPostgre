@@ -57,3 +57,39 @@ class Alerta(models.Model):
 
     def __str__(self):
         return self.title
+
+
+# Envio de Alertas por mail modelo
+
+class EmailAlertConfig(models.Model):
+    FREQUENCY_CHOICES = [
+        ('daily', 'Diario'),
+        ('weekly', 'Semanal'),
+        ('monthly', 'Mensual'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='email_alert_configs')
+    name = models.CharField(max_length=100, verbose_name="Nombre de la configuración")
+    active = models.BooleanField(default=True, verbose_name="Activo")
+    
+    # Filtros
+    keywords = models.ManyToManyField(Keyword, blank=True, related_name='email_configs', verbose_name="Palabras clave")
+    source_type = models.CharField(max_length=300, blank=True, verbose_name="Tipo de fuente")
+    category = models.CharField(max_length=300, blank=True, verbose_name="Categoría")
+    country = models.CharField(max_length=300, blank=True, verbose_name="País")
+    institution = models.CharField(max_length=300, blank=True, verbose_name="Institución")
+    
+    # Filtros de fecha
+    days_back = models.IntegerField(default=1, verbose_name="Días hacia atrás")
+    
+    # Configuración de correo
+    email = models.EmailField(verbose_name="Correo electrónico para recibir alertas")
+    frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, default='daily', verbose_name="Frecuencia")
+    
+    # Seguimiento
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_sent = models.DateTimeField(null=True, blank=True, verbose_name="Último envío")
+    
+    def __str__(self):
+        return f"{self.name} - {self.user.username}"

@@ -57,15 +57,15 @@ async def scrape_invima_noticias_co():
                     item = {
                         'title': titulo,
                         'description': descripcion,
-                        'source_type': "INVIMA",
-                        'category': etiqueta,
+                        'source_type': "Ejecutivo",
+                        'category': "Noticias",
                         'country': "Colombia",
                         'source_url': url_completa,
                         'presentation_date': fecha_publicacion,
                         'metadata': {
                             'image_url': imagen_url
                         },
-                        'institution': "INVIMA"
+                        'institution': "INVIMA Colombia"
                     }
                     items.append(item)
 

@@ -76,7 +76,7 @@ async def scrape_anmat_noti_ar():
                     item = {
                         'title': titulo,
                         'description': descripcion,
-                        'source_type': "Gobierno Argentina",
+                        'source_type': "Ejecutivo",
                         'category': "Noticias",
                         'country': "Argentina",
                         'source_url': url_completa,
@@ -84,7 +84,7 @@ async def scrape_anmat_noti_ar():
                         'metadata': {
                             'image_url': imagen_url
                         },
-                        'institution': "Gobierno de Argentina"
+                        'institution': "ANMAT Argentina"
                     }
                     items.append(item)
 

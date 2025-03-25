@@ -1,0 +1,22 @@
+Alertas configuradas: {{ config.name }}
+
+Hola {{ user.first_name|default:user.username }},
+
+Aquí tienes las alertas que coinciden con tu configuración:
+
+{% for alerta in alertas %}
+* {{ alerta.title }}
+  Fecha: {{ alerta.presentation_date|date:"d/m/Y" }}
+  Fuente: {{ alerta.source_type }}
+  País: {{ alerta.country }}
+  Institución: {{ alerta.institution }}
+  
+  {{ alerta.description|truncatewords:30 }}
+  
+  URL: {{ alerta.source_url }}
+
+{% endfor %}
+
+---
+Este correo fue enviado desde la plataforma de monitoreo de alertas.
+Si deseas modificar tus configuraciones, inicia sesión en la plataforma.

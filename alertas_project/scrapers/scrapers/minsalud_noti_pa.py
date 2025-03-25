@@ -63,7 +63,7 @@ async def scrape_minsa_noti_pa():
                         "title": title,
                         "description": descripcion,
                         "source_url": noticia_url,
-                        "source_type": "minsa_noticias_pa",
+                        "source_type": "Ejecutivo",
                         "country": "Panamá",
                         "presentation_date": fecha,
                         "category": "Noticias",
