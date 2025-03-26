@@ -398,4 +398,18 @@ i[class^="bi-"] {
         width: 50px !important;
         height: 50px !important;
     }
+
+    /* Estilos para el botón de limpiar búsqueda */
+
+    .btn-close {
+        font-size: 0.7rem;
+        opacity: 0.5;
+    }
+    
+    .btn-close:hover {
+        opacity: 1;
+    }
 }
+
+
+

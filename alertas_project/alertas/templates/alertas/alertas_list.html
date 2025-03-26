@@ -43,42 +43,55 @@
         </div>
     </div>
     
-    <!-- Formulario de filtros sin los campos Usuario, Palabras clave y Búsqueda -->
-    <form method="get" id="filterForm">
-        <div class="filter-section">
-            <label for="id_institution" class="form-label">Institución:</label>
-            {{ form.institution }}
-        </div>
-        
-        <div class="filter-section">
-            <label for="id_country" class="form-label">País:</label>
-            {{ form.country }}
-        </div>
-        
-        <div class="filter-section">
-            <label class="form-label">Rango de fechas:</label>
-            <div class="row">
-                <div class="col">
-                    <label for="id_start_date" class="form-label small">Desde:</label>
-                    {{ form.start_date }}
-                </div>
-                <div class="col">
-                    <label for="id_end_date" class="form-label small">Hasta:</label>
-                    {{ form.end_date }}
-                </div>
+<!-- Sección de filtros en alertas_list.html -->
+<form method="get" id="filterForm">
+    <div class="filter-section">
+        <label for="id_institution" class="form-label">Institución:</label>
+        {{ form.institution }}
+    </div>
+    
+    <div class="filter-section">
+        <label for="id_country" class="form-label">País:</label>
+        {{ form.country }}
+    </div>
+    
+    <!-- Nuevos filtros -->
+    <div class="filter-section">
+        <label for="id_source_type" class="form-label">Tipo de Fuente:</label>
+        {{ form.source_type }}
+    </div>
+    
+    <div class="filter-section">
+        <label for="id_category" class="form-label">Categoría:</label>
+        {{ form.category }}
+    </div>
+    
+    <div class="filter-section">
+        <label class="form-label">Rango de fechas:</label>
+        <div class="row">
+            <div class="col">
+                <label for="id_start_date" class="form-label small">Desde:</label>
+                {{ form.start_date }}
+            </div>
+            <div class="col">
+                <label for="id_end_date" class="form-label small">Hasta:</label>
+                {{ form.end_date }}
             </div>
         </div>
-        
-        <div class="filter-section">
-            <label for="id_page_size" class="form-label">Registros por página:</label>
-            {{ form.page_size }}
-        </div>
-        
-        <!-- Campo de búsqueda oculto para mantener sincronizado con el de la cabecera -->
-        <input type="hidden" name="search_text" id="hidden_search_text">
-        
-        <button type="submit" class="btn btn-primary w-100 mt-3">Aplicar filtros</button>
-    </form>
+    </div>
+    
+    <!-- Campo de búsqueda oculto para mantener sincronizado con el de la cabecera -->
+    <input type="hidden" name="search_text" id="hidden_search_text">
+    
+    <div class="d-flex gap-2 mt-3">
+        <a href="{% url 'alertas:alertas_list' %}" class="btn btn-outline-secondary flex-grow-1">
+            <i class="bi bi-x-circle"></i> Limpiar filtros
+        </a>
+        <button type="submit" class="btn btn-primary flex-grow-1">
+            <i class="bi bi-filter"></i> Aplicar filtros
+        </button>
+    </div>
+</form>
 {% endblock %}
 
 {% block alertas_content %}
@@ -90,9 +103,17 @@
         <div class="col-md-6">
             <!-- Formulario de búsqueda en cabecera -->
             <form method="get" id="searchForm" class="d-flex">
-                <input type="text" name="search_text" id="header_search_text" 
-                       class="form-control me-2" placeholder="Buscar en título y descripción..."
-                       value="{{ request.GET.search_text|default:'' }}">
+                <div class="position-relative flex-grow-1 me-2">
+                    <input type="text" name="search_text" id="header_search_text" 
+                           class="form-control" placeholder="Buscar en título y descripción..."
+                           value="{{ request.GET.search_text|default:'' }}">
+                    {% if request.GET.search_text %}
+                    <a href="javascript:void(0)" onclick="document.getElementById('header_search_text').value=''; document.getElementById('searchForm').submit();" 
+                       class="position-absolute top-50 end-0 translate-middle-y me-3" 
+                       style="text-decoration: none; color: #6c757d; font-weight: bold; font-size: 18px;"
+                       title="Limpiar búsqueda">×</a>
+                    {% endif %}
+                </div>
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-search"></i> Buscar
                 </button>

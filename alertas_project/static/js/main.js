@@ -179,6 +179,74 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Función para limpiar el campo de búsqueda
+    function clearSearch() {
+        const searchInput = document.getElementById('header_search_text');
+        if (searchInput) {
+            searchInput.value = '';
+            const searchForm = document.getElementById('searchForm');
+            if (searchForm) {
+                searchForm.submit();
+            }
+        }
+    }
+    
+    // Asignar la función clearSearch al botón de limpiar
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', clearSearch);
+    }
+    
+    // También inicializar las fechas y sincronizar formularios
+    const startDateInput = document.getElementById('id_start_date');
+    const endDateInput = document.getElementById('id_end_date');
+    const minDateAttr = startDateInput ? startDateInput.getAttribute('data-min-date') : null;
+    const maxDateAttr = endDateInput ? endDateInput.getAttribute('data-max-date') : null;
+    
+    if (startDateInput && minDateAttr) {
+        startDateInput.value = minDateAttr;
+    }
+    
+    if (endDateInput && maxDateAttr) {
+        endDateInput.value = maxDateAttr;
+    }
+    
+    // Sincronizar formularios de filtro y búsqueda
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function() {
+            const headerSearchText = document.getElementById('header_search_text');
+            const hiddenSearchText = document.getElementById('hidden_search_text');
+            
+            if (headerSearchText && hiddenSearchText) {
+                hiddenSearchText.value = headerSearchText.value;
+            }
+        });
+    }
+    
+    const searchForm = document.getElementById('searchForm');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function() {
+            // Agregar los valores del formulario de filtros
+            if (filterForm) {
+                const filterInputs = filterForm.querySelectorAll('input, select');
+                filterInputs.forEach(function(input) {
+                    if (input.name && input.name !== 'search_text' && input.value) {
+                        // Verificar si ya existe un campo oculto con este nombre
+                        const existingInput = searchForm.querySelector(`input[name="${input.name}"]`);
+                        if (!existingInput) {
+                            const hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.name = input.name;
+                            hiddenInput.value = input.value;
+                            searchForm.appendChild(hiddenInput);
+                        }
+                    }
+                });
+            }
+        });
+    }
+    
     // Ejecutar las funciones para corregir los iconos
     fixBootstrapIcons();
     fixCirclesAndNumbers();
@@ -296,4 +364,47 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // Manejar el toggle del filtro de palabras clave
+    const toggleKeywordFilter = document.getElementById('toggleKeywordFilter');
+    if (toggleKeywordFilter) {
+        toggleKeywordFilter.addEventListener('change', function() {
+            // Enviar solicitud AJAX para activar/desactivar el filtro
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', toggleKeywordFilter.getAttribute('data-url') || '/alertas/toggle-filtro-keywords/');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            
+            // Obtener el token CSRF
+            const csrfTokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfTokenElement) {
+                xhr.setRequestHeader('X-CSRFToken', csrfTokenElement.value);
+            }
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            location.reload();
+                        }
+                    } catch (e) {
+                        console.error('Error al procesar la respuesta:', e);
+                    }
+                } else {
+                    console.error('Error en la solicitud:', xhr.status);
+                    alert('Ocurrió un error al cambiar el estado del filtro.');
+                }
+            };
+            
+            xhr.onerror = function() {
+                console.error('Error en la solicitud AJAX');
+                alert('Ocurrió un error al cambiar el estado del filtro.');
+            };
+            
+            xhr.send();
+        });
+    }
+    
+    // Exportar la función clearSearch para que sea accesible globalmente
+    window.clearSearch = clearSearch;
 });

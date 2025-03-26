@@ -3,6 +3,7 @@ from django import forms
 from django.contrib.auth.models import User
 from .models import Alerta, Keyword, EmailAlertConfig
 
+# Modificar el formulario AlertaFilterForm en forms.py
 class AlertaFilterForm(forms.Form):
     user = forms.ModelChoiceField(
         queryset=User.objects.all(),
@@ -29,6 +30,19 @@ class AlertaFilterForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     
+    # Nuevos campos de filtro
+    source_type = forms.ChoiceField(
+        choices=[],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    
+    category = forms.ChoiceField(
+        choices=[],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    
     start_date = forms.DateField(
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         required=False
@@ -44,12 +58,7 @@ class AlertaFilterForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Buscar por título o descripción'})
     )
     
-    page_size = forms.IntegerField(
-        min_value=10,
-        max_value=100,
-        initial=50,
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
-    )
+    # Eliminamos el campo page_size
     
     def __init__(self, *args, **kwargs):
         super(AlertaFilterForm, self).__init__(*args, **kwargs)
@@ -65,6 +74,18 @@ class AlertaFilterForm(forms.Form):
         country_choices = [('', 'Todos')]
         country_choices.extend([(country, country) for country in countries if country])
         self.fields['country'].choices = country_choices
+        
+        # Configurar opciones para tipos de fuente
+        source_types = Alerta.objects.values_list('source_type', flat=True).distinct().order_by('source_type')
+        source_type_choices = [('', 'Todos')]
+        source_type_choices.extend([(st, st) for st in source_types if st])
+        self.fields['source_type'].choices = source_type_choices
+        
+        # Configurar opciones para categorías
+        categories = Alerta.objects.values_list('category', flat=True).distinct().order_by('category')
+        category_choices = [('', 'Todas')]
+        category_choices.extend([(cat, cat) for cat in categories if cat])
+        self.fields['category'].choices = category_choices
         
         # Las opciones de keywords se configurarán dinámicamente en la vista
         # cuando se seleccione un usuario

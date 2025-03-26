@@ -53,6 +53,16 @@ def alertas_list(request):
         if country:
             alertas_query = alertas_query.filter(country=country)
         
+        # Filtro por tipo de fuente (nuevo)
+        source_type = request.GET.get('source_type')
+        if source_type:
+            alertas_query = alertas_query.filter(source_type=source_type)
+        
+        # Filtro por categoría (nuevo)
+        category = request.GET.get('category')
+        if category:
+            alertas_query = alertas_query.filter(category=category)
+        
         # Filtro por rango de fechas
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
@@ -97,8 +107,8 @@ def alertas_list(request):
             
             alertas_query = alertas_query.filter(keyword_conditions)
     
-    # Paginación
-    page_size = int(request.GET.get('page_size', 50))
+    # Paginación (valor fijo de 30 registros por página)
+    page_size = 30
     paginator = Paginator(alertas_query, page_size)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
