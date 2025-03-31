@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle de Log{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Detalle de ejecución de Scraper</h1>
+        <div>
+            <a href="{% url 'scrapers:logs' %}" class="btn btn-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Volver a Logs
+            </a>
+            <a href="{% url 'scrapers:dashboard' %}" class="btn btn-primary">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">{{ log.scraper_name }} - {{ log.timestamp|date:"d/m/Y H:i:s" }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table">
+                        <tr>
+                            <th style="width: 180px;">ID:</th>
+                            <td>{{ log.id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Scraper ID:</th>
+                            <td>{{ log.scraper_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Fecha/Hora:</th>
+                            <td>{{ log.timestamp }}</td>
+                        </tr>
+                        <tr>
+                            <th>Estado:</th>
+                            <td>
+                                {% if log.success %}
+                                <span class="badge bg-success">Éxito</span>
+                                {% else %}
+                                <span class="badge bg-danger">Error</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Tiempo de ejecución:</th>
+                            <td>{{ log.execution_time|floatformat:2 }} segundos</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table">
+                        <tr>
+                            <th style="width: 180px;">Items procesados:</th>
+                            <td>{{ log.items_processed }}</td>
+                        </tr>
+                        <tr>
+                            <th>Items creados:</th>
+                            <td>{{ log.items_created }}</td>
+                        </tr>
+                        <tr>
+                            <th>Items actualizados:</th>
+                            <td>{{ log.items_updated }}</td>
+                        </tr>
+                        <tr>
+                            <th>Items fallidos:</th>
+                            <td>{{ log.items_failed }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            {% if log.message %}
+            <div class="mt-4">
+                <h5>Mensaje</h5>
+                <div class="card bg-light">
+                    <div class="card-body">
+                        {{ log.message }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if log.error_details %}
+            <div class="mt-4">
+                <h5>Detalles de errores</h5>
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <pre class="text-danger mb-0">{{ log.error_details }}</pre>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if log.scraper_id != 'all_scrapers' %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Acciones</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'scrapers:run_specific' log.scraper_id %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-arrow-repeat"></i> Ejecutar de nuevo
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

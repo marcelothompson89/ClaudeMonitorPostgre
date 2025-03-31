@@ -4,6 +4,10 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+from django.core.paginator import Paginator
+from django.utils import timezone
+from datetime import timedelta
+from .models import ScraperLog
 
 from .tasks import run_scraper, run_all_scrapers, get_available_scrapers
 
@@ -67,3 +71,72 @@ def run_specific_scraper(request, scraper_id):
         messages.error(request, f"Error al ejecutar el scraper '{result.get('scraper_name')}': {result.get('message')}")
     
     return redirect(reverse('scrapers:dashboard'))
+
+
+from django.core.paginator import Paginator
+from django.utils import timezone
+from datetime import timedelta
+from .models import ScraperLog
+
+@staff_member_required
+def view_scraper_logs(request):
+    """Vista para consultar los logs de ejecución de scrapers."""
+    logs = ScraperLog.objects.all()
+    
+    # Filtros por scraper_id
+    scraper_id = request.GET.get('scraper_id')
+    if scraper_id:
+        logs = logs.filter(scraper_id=scraper_id)
+    
+    # Filtro por éxito/error
+    status = request.GET.get('status')
+    if status == 'success':
+        logs = logs.filter(success=True)
+    elif status == 'error':
+        logs = logs.filter(success=False)
+    
+    # Filtro por fecha
+    date_range = request.GET.get('date_range')
+    if date_range == 'today':
+        today = timezone.now().date()
+        logs = logs.filter(timestamp__date=today)
+    elif date_range == 'yesterday':
+        yesterday = timezone.now().date() - timedelta(days=1)
+        logs = logs.filter(timestamp__date=yesterday)
+    elif date_range == 'last_7_days':
+        last_week = timezone.now() - timedelta(days=7)
+        logs = logs.filter(timestamp__gte=last_week)
+    elif date_range == 'last_30_days':
+        last_month = timezone.now() - timedelta(days=30)
+        logs = logs.filter(timestamp__gte=last_month)
+    
+    # Paginación
+    paginator = Paginator(logs, 25)  # 25 registros por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Para el filtro de scraper_id
+    available_scrapers = [{'id': 'all_scrapers', 'name': 'Todos los scrapers'}]
+    available_scrapers.extend(get_available_scrapers())
+    
+    context = {
+        'page_obj': page_obj,
+        'available_scrapers': available_scrapers
+    }
+    
+    return render(request, 'scrapers/logs.html', context)
+
+@staff_member_required
+def view_scraper_log_detail(request, log_id):
+    """Vista para ver el detalle de un log específico."""
+    try:
+        log = ScraperLog.objects.get(id=log_id)
+    except ScraperLog.DoesNotExist:
+        messages.error(request, "El registro de log no existe.")
+        return redirect('scrapers:logs')
+    
+    context = {
+        'log': log
+    }
+    
+    return render(request, 'scrapers/log_detail.html', context)

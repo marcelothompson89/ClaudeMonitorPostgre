@@ -1,8 +1,11 @@
 import asyncio
 import importlib
 import logging
+import time
 from datetime import datetime
 from typing import Dict, Any, Callable, List
+from .models import ScraperLog
+
 
 from alertas.models import Alerta
 
@@ -320,6 +323,7 @@ def save_items_to_db(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     created_count = 0
     updated_count = 0
     error_count = 0
+    error_details = []
     
     for item in items:
         try:
@@ -340,56 +344,59 @@ def save_items_to_db(items: List[Dict[str, Any]]) -> Dict[str, Any]:
                     defaults['metadata_nota_url'] = item['metadata'].get('image_url')
             
             # Buscar por source_url, title y presentation_date según la restricción unique
+            obj_created = False  # Valor predeterminado en caso de error
+            
             if item.get('source_url') and item.get('presentation_date'):
-                alerta, created = Alerta.objects.update_or_create(
+                alerta, obj_created = Alerta.objects.update_or_create(
                     source_url=item['source_url'],
                     title=item['title'],
                     presentation_date=item['presentation_date'],
                     defaults=defaults
                 )
             elif item.get('presentation_date'):  # Si no hay source_url pero sí fecha
-                alerta, created = Alerta.objects.update_or_create(
+                alerta, obj_created = Alerta.objects.update_or_create(
                     title=item['title'],
                     presentation_date=item['presentation_date'],
                     defaults=defaults
                 )
             else:  # Si no hay ni source_url ni fecha, usar solo el título
-                alerta, created = Alerta.objects.update_or_create(
+                alerta, obj_created = Alerta.objects.update_or_create(
                     title=item['title'],
                     defaults=defaults
                 )
                 
-            if created:
+            if obj_created:
                 created_count += 1
             else:
                 updated_count += 1
                 
         except Exception as e:
             error_count += 1
-            logger.error(f"Error al guardar alerta {item.get('title', 'Sin título')}: {str(e)}")
+            error_msg = f"Error al guardar alerta {item.get('title', 'Sin título')}: {str(e)}"
+            logger.error(error_msg)
+            error_details.append(error_msg)
     
     return {
         'created': created_count,
         'updated': updated_count,
         'errors': error_count,
+        'error_details': '\n'.join(error_details),
         'items_processed': len(items)
     }
 
 def run_scraper(scraper_id: str) -> Dict[str, Any]:
     """
     Ejecuta un scraper específico por su ID y guarda los resultados en la base de datos.
-    
-    Args:
-        scraper_id: Identificador del scraper a ejecutar
-        
-    Returns:
-        Dict con resultados de la ejecución
     """
+    start_time = time.time()
+    
     if scraper_id not in AVAILABLE_SCRAPERS:
-        return {
+        result = {
             'success': False,
             'message': f"Scraper con ID '{scraper_id}' no encontrado"
         }
+        save_scraper_log(scraper_id, result, 0)
+        return result
     
     scraper_info = AVAILABLE_SCRAPERS[scraper_id]
     
@@ -404,7 +411,7 @@ def run_scraper(scraper_id: str) -> Dict[str, Any]:
         # Guardar los resultados en la base de datos
         stats = save_items_to_db(items)
         
-        return {
+        result = {
             'success': True,
             'scraper_id': scraper_id,
             'scraper_name': scraper_info['name'],
@@ -412,26 +419,43 @@ def run_scraper(scraper_id: str) -> Dict[str, Any]:
             'created': stats['created'],
             'updated': stats['updated'],
             'errors': stats['errors'],
+            'error_details': stats.get('error_details', ''),
             'message': f"Scraper ejecutado con éxito. Procesados {stats['items_processed']} items."
         }
+        
+        # Calcular tiempo de ejecución
+        execution_time = time.time() - start_time
+        
+        # Guardar log
+        save_scraper_log(scraper_id, result, execution_time)
+        
+        return result
     
     except Exception as e:
         error_msg = f"Error ejecutando scraper '{scraper_id}': {str(e)}"
         logger.error(error_msg)
-        return {
+        result = {
             'success': False,
             'scraper_id': scraper_id,
             'scraper_name': scraper_info['name'],
-            'message': error_msg
+            'message': error_msg,
+            'error_details': str(e)
         }
+        
+        # Calcular tiempo de ejecución
+        execution_time = time.time() - start_time
+        
+        # Guardar log
+        save_scraper_log(scraper_id, result, execution_time)
+        
+        return result
 
 def run_all_scrapers() -> Dict[str, Any]:
     """
     Ejecuta todos los scrapers disponibles.
-    
-    Returns:
-        Dict con resultados de todas las ejecuciones
     """
+    start_time = time.time()
+    
     results = {
         'timestamp': datetime.now(),
         'scrapers': {}
@@ -441,6 +465,7 @@ def run_all_scrapers() -> Dict[str, Any]:
     total_processed = 0
     total_created = 0
     total_updated = 0
+    total_errors = 0
     failures = 0
     
     for scraper_id in AVAILABLE_SCRAPERS:
@@ -451,16 +476,38 @@ def run_all_scrapers() -> Dict[str, Any]:
             total_processed += result.get('items_processed', 0)
             total_created += result.get('created', 0)
             total_updated += result.get('updated', 0)
+            total_errors += result.get('errors', 0)
         else:
             failures += 1
+    
+    execution_time = time.time() - start_time
     
     results['summary'] = {
         'total_processed': total_processed,
         'total_created': total_created,
         'total_updated': total_updated,
+        'total_errors': total_errors,
         'failures': failures,
-        'success': failures == 0
+        'success': failures == 0,
+        'execution_time': execution_time
     }
+    
+    # Registrar la ejecución completa de todos los scrapers
+    try:
+        log = ScraperLog(
+            scraper_id='all_scrapers',
+            scraper_name='Todos los scrapers',
+            items_processed=total_processed,
+            items_created=total_created,
+            items_updated=total_updated,
+            items_failed=total_errors,
+            success=failures == 0,
+            message=f"Ejecutados {len(AVAILABLE_SCRAPERS)} scrapers. {failures} fallaron.",
+            execution_time=execution_time
+        )
+        log.save()
+    except Exception as e:
+        logger.error(f"Error al guardar log de ejecución completa: {str(e)}")
     
     return results
 
@@ -479,3 +526,31 @@ def get_available_scrapers():
         }
         for scraper_id, info in AVAILABLE_SCRAPERS.items()
     ]
+
+def save_scraper_log(scraper_id, result, execution_time=None):
+    """
+    Guarda un registro de la ejecución del scraper en la base de datos.
+    
+    Args:
+        scraper_id: Identificador del scraper
+        result: Diccionario con los resultados de la ejecución
+        execution_time: Tiempo de ejecución en segundos (opcional)
+    """
+    try:
+        log = ScraperLog(
+            scraper_id=scraper_id,
+            scraper_name=result.get('scraper_name', 'Desconocido'),
+            items_processed=result.get('items_processed', 0),
+            items_created=result.get('created', 0),
+            items_updated=result.get('updated', 0),
+            items_failed=result.get('errors', 0),
+            success=result.get('success', False),
+            message=result.get('message', ''),
+            error_details=result.get('error_details', ''),
+            execution_time=execution_time
+        )
+        log.save()
+        return log
+    except Exception as e:
+        logger.error(f"Error al guardar log del scraper {scraper_id}: {str(e)}")
+        return None

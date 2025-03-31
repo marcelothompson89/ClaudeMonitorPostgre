@@ -20,12 +20,3 @@ if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-import os
-print("DEBUG:", settings.DEBUG)
-print("STATIC_URL:", settings.STATIC_URL)
-print("STATIC_ROOT:", settings.STATIC_ROOT)
-print("STATICFILES_DIRS:", settings.STATICFILES_DIRS)
-print("STATICFILES_DIRS[0] exists:", os.path.exists(settings.STATICFILES_DIRS[0]))
-# Verificar si algunos archivos específicos existen
-css_path = os.path.join(settings.STATICFILES_DIRS[0], 'css/styles.css')
-print("CSS file exists:", os.path.exists(css_path))
