@@ -51,7 +51,7 @@ async def scrape_minsalud_noti_do():
                         "country": "República Dominicana",
                         "presentation_date": fecha,
                         "category": "Noticias",
-                        "institution": "Ministerio de Salud Pública RD",
+                        "institution": "Ministerio de Salud República Dominicana",
                         "metadata": json.dumps({"tipo": "Noticia"})
                     }
 
