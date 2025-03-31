@@ -20,6 +20,7 @@
                 <div class="mb-3">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="toggleKeywordFilter" 
+                               data-url="{% url 'alertas:toggle_keyword_filter' %}" 
                                {% if keyword_filter_active %}checked{% endif %}>
                         <label class="form-check-label" for="toggleKeywordFilter">
                             Filtrar por mis palabras clave
