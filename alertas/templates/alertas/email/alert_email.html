@@ -75,7 +75,7 @@
             <strong>Institución:</strong> {{ alerta.institution }}
         </div>
         <div class="alert-desc">
-            {{ alerta.description|truncatewords:50 }}
+            {{ alerta.description|linebreaks }}
         </div>
         <a href="{{ alerta.source_url }}" class="alert-link" target="_blank">Ver más</a>
     </div>

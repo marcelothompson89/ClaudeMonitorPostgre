@@ -3,69 +3,135 @@
 {% load widget_tweaks %}
 
 {% block alertas_content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Configuraciones de alertas por correo</h1>
-        <a href="{% url 'alertas:email_alert_config_create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Nueva configuración
-        </a>
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h1>Configuraciones de alertas por correo</h1>
+            <p class="lead">
+                Gestiona tus configuraciones de alertas por correo para recibir notificaciones automáticas sobre las alertas que te interesan.
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'alertas:alertas_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver a Alertas
+            </a>
+        </div>
     </div>
 
-    {% if configs %}
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="bg-primary text-white">
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Estado</th>
-                        <th>Frecuencia</th>
-                        <th>Correo</th>
-                        <th>Último envío</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for config in configs %}
-                    <tr>
-                        <td>{{ config.name }}</td>
-                        <td>
-                            {% if config.active %}
-                                <span class="badge bg-success">Activo</span>
-                            {% else %}
-                                <span class="badge bg-secondary">Inactivo</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ config.get_frequency_display }}</td>
-                        <td>{{ config.email }}</td>
-                        <td>
-                            {% if config.last_sent %}
-                                {{ config.last_sent|date:"d/m/Y H:i" }}
-                            {% else %}
-                                <span class="text-muted">Nunca</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <a href="{% url 'alertas:send_email_alert' config.pk %}" class="btn btn-sm btn-outline-primary" title="Enviar ahora">
-                                    <i class="bi bi-envelope"></i>
-                                </a>
-                                <a href="{% url 'alertas:email_alert_config_edit' config.pk %}" class="btn btn-sm btn-outline-secondary" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="{% url 'alertas:email_alert_config_delete' config.pk %}" class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <!-- Botón de acción principal -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Nueva configuración de alerta</h5>
+                </div>
+                <div class="card-body">
+                    <p>Crea una nueva configuración para recibir alertas por correo electrónico según tus preferencias.</p>
+                    <a href="{% url 'alertas:email_alert_config_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-lg"></i> Crear nueva configuración
+                    </a>
+                </div>
+            </div>
         </div>
-    {% else %}
-        <div class="alert alert-info">
-            <p>No tienes configuraciones de alertas por correo. <a href="{% url 'alertas:email_alert_config_create' %}">Crea una nueva configuración</a>.</p>
+        
+        <div class="col-md-6">
+            <!-- Instrucciones -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">¿Cómo funciona?</h5>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li>Crea una configuración que defina qué alertas quieres recibir.</li>
+                        <li>Elige filtros como país, institución, tipo de fuente y palabras clave.</li>
+                        <li>Selecciona la frecuencia de envío: diaria, semanal o mensual.</li>
+                        <li>Las alertas se enviarán automáticamente según tu configuración.</li>
+                        <li>También puedes enviar manualmente una alerta en cualquier momento.</li>
+                    </ol>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Puedes crear múltiples configuraciones para diferentes temas de interés o direcciones de correo.
+                    </div>
+                </div>
+            </div>
         </div>
-    {% endif %}
+    </div>
+
+    <!-- Listado de configuraciones -->
+    <div class="card mt-4 shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Mis configuraciones de alertas</h5>
+            {% if configs %}
+                <span class="badge bg-primary">Total: {{ configs|length }}</span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if configs %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Estado</th>
+                                <th>Frecuencia</th>
+                                <th>Correo</th>
+                                <th>Último envío</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for config in configs %}
+                            <tr>
+                                <td>
+                                    <strong>{{ config.name }}</strong>
+                                    <div class="small text-muted">
+                                        {% if config.keywords.all %}
+                                            Palabras clave: 
+                                            {% for keyword in config.keywords.all %}
+                                                <span class="badge bg-info text-dark">{{ keyword.word }}</span>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if config.active %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ config.get_frequency_display }}</td>
+                                <td>{{ config.email }}</td>
+                                <td>
+                                    {% if config.last_sent %}
+                                        {{ config.last_sent|date:"d/m/Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">Nunca</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'alertas:send_email_alert' config.pk %}" class="btn btn-sm btn-outline-primary" title="Enviar ahora">
+                                            <i class="bi bi-envelope"></i>
+                                        </a>
+                                        <a href="{% url 'alertas:email_alert_config_edit' config.pk %}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'alertas:email_alert_config_delete' config.pk %}" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> No tienes configuraciones de alertas por correo. <a href="{% url 'alertas:email_alert_config_create' %}">Crea una nueva configuración</a> para comenzar a recibir notificaciones.
+                </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

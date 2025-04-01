@@ -152,10 +152,22 @@
                                         {% if alerta.country %}
                                             <span class="country-name">{{ alerta.country }}</span>
                                             <span class="country-flag ms-2">
-                                                <img src="https://flagcdn.com/24x18/{{ alerta.country|lower|slice:":2" }}.png" 
-                                                     alt="{{ alerta.country }}" 
-                                                     title="{{ alerta.country }}"
-                                                     onerror="this.onerror=null; this.src='https://flagcdn.com/24x18/xx.png';">
+                                                {% with country_code=alerta.country|lower %}
+                                                    {% if country_code == "méxico" or country_code == "mexico" %}
+                                                        <img src="https://flagcdn.com/24x18/mx.png" 
+                                                             alt="{{ alerta.country }}" 
+                                                             title="{{ alerta.country }}">
+                                                    {% elif country_code == "chile" %}
+                                                        <img src="https://flagcdn.com/24x18/cl.png" 
+                                                             alt="{{ alerta.country }}" 
+                                                             title="{{ alerta.country }}">
+                                                    {% else %}
+                                                        <img src="https://flagcdn.com/24x18/{{ country_code|slice:":2" }}.png" 
+                                                             alt="{{ alerta.country }}" 
+                                                             title="{{ alerta.country }}"
+                                                             onerror="this.onerror=null; this.src='https://flagcdn.com/24x18/xx.png';">
+                                                    {% endif %}
+                                                {% endwith %}
                                             </span>
                                         {% endif %}
                                     </div>

@@ -123,16 +123,17 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Configuración de correo electrónico
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Para desarrollo
-DEFAULT_FROM_EMAIL = 'marcelo_thompson@hotmail.com'  # Cambiar a tu dominio real en producción
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Para desarrollo
+# DEFAULT_FROM_EMAIL = 'marcelo_thompson@hotmail.com'  # Cambiar a tu dominio real en producción
 
-# Para producción, descomenta y configura estas líneas:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.tuservidor.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'tu_usuario@tudominio.com'
-# EMAIL_HOST_PASSWORD = 'tu_contraseña'
+# Configuración para Gmail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')  # Tu dirección de Gmail
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')  # Tu contraseña de aplicación
+DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER')  # O cualquier otro correo que quieras mostrar
 
 
 LOGGING = {
