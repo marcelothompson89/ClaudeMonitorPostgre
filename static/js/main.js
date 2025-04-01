@@ -367,65 +367,65 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Manejar el toggle del filtro de palabras clave
 
-    const toggleKeywordFilter = document.getElementById('toggleKeywordFilter');
-    if (toggleKeywordFilter) {
-        toggleKeywordFilter.addEventListener('change', function() {
-            // Corregir la URL para que funcione en todos los entornos
-            let url;
+    // const toggleKeywordFilter = document.getElementById('toggleKeywordFilter');
+    // if (toggleKeywordFilter) {
+    //     toggleKeywordFilter.addEventListener('change', function() {
+    //         // Corregir la URL para que funcione en todos los entornos
+    //         let url;
             
-            if (toggleKeywordFilter.hasAttribute('data-url')) {
-                url = toggleKeywordFilter.getAttribute('data-url');
-            } else {
-                // Construir URL absoluta basada en la ubicación actual
-                const baseUrl = window.location.pathname.includes('/alertas') 
-                    ? '/alertas/toggle-filtro-keywords/' 
-                    : '/toggle-filtro-keywords/';
-                url = baseUrl;
-            }
+    //         if (toggleKeywordFilter.hasAttribute('data-url')) {
+    //             url = toggleKeywordFilter.getAttribute('data-url');
+    //         } else {
+    //             // Construir URL absoluta basada en la ubicación actual
+    //             const baseUrl = window.location.pathname.includes('/alertas') 
+    //                 ? '/alertas/toggle-filtro-keywords/' 
+    //                 : '/toggle-filtro-keywords/';
+    //             url = baseUrl;
+    //         }
             
-            console.log('URL para toggle:', url); // Depuración
+    //         console.log('URL para toggle:', url); // Depuración
             
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', url);
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    //         const xhr = new XMLHttpRequest();
+    //         xhr.open('POST', url);
+    //         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             
-            // Obtener el token CSRF
-            const csrfTokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
-            if (csrfTokenElement) {
-                xhr.setRequestHeader('X-CSRFToken', csrfTokenElement.value);
-            } else {
-                console.error('No se encontró el token CSRF');
-            }
+    //         // Obtener el token CSRF
+    //         const csrfTokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
+    //         if (csrfTokenElement) {
+    //             xhr.setRequestHeader('X-CSRFToken', csrfTokenElement.value);
+    //         } else {
+    //             console.error('No se encontró el token CSRF');
+    //         }
             
-            xhr.onload = function() {
-                console.log('Respuesta recibida:', xhr.status, xhr.responseText); // Depuración
-                if (xhr.status === 200) {
-                    try {
-                        const response = JSON.parse(xhr.responseText);
-                        if (response.success) {
-                            location.reload();
-                        } else {
-                            console.error('Error en la respuesta:', response);
-                            alert('Ocurrió un error al cambiar el estado del filtro: ' + (response.error || 'Error desconocido'));
-                        }
-                    } catch (e) {
-                        console.error('Error al procesar la respuesta:', e, 'Texto de respuesta:', xhr.responseText);
-                        alert('Error al procesar la respuesta del servidor');
-                    }
-                } else {
-                    console.error('Error en la solicitud:', xhr.status, xhr.statusText);
-                    alert('Ocurrió un error en la solicitud: ' + xhr.status);
-                }
-            };
+    //         xhr.onload = function() {
+    //             console.log('Respuesta recibida:', xhr.status, xhr.responseText); // Depuración
+    //             if (xhr.status === 200) {
+    //                 try {
+    //                     const response = JSON.parse(xhr.responseText);
+    //                     if (response.success) {
+    //                         location.reload();
+    //                     } else {
+    //                         console.error('Error en la respuesta:', response);
+    //                         alert('Ocurrió un error al cambiar el estado del filtro: ' + (response.error || 'Error desconocido'));
+    //                     }
+    //                 } catch (e) {
+    //                     console.error('Error al procesar la respuesta:', e, 'Texto de respuesta:', xhr.responseText);
+    //                     alert('Error al procesar la respuesta del servidor');
+    //                 }
+    //             } else {
+    //                 console.error('Error en la solicitud:', xhr.status, xhr.statusText);
+    //                 alert('Ocurrió un error en la solicitud: ' + xhr.status);
+    //             }
+    //         };
             
-            xhr.onerror = function(e) {
-                console.error('Error en la solicitud AJAX:', e);
-                alert('Ocurrió un error de red al cambiar el estado del filtro.');
-            };
+    //         xhr.onerror = function(e) {
+    //             console.error('Error en la solicitud AJAX:', e);
+    //             alert('Ocurrió un error de red al cambiar el estado del filtro.');
+    //         };
             
-            xhr.send();
-        });
-    }
+    //         xhr.send();
+    //     });
+    // }
     
     // Exportar la función clearSearch para que sea accesible globalmente
     window.clearSearch = clearSearch;

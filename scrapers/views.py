@@ -72,12 +72,6 @@ def run_specific_scraper(request, scraper_id):
     
     return redirect(reverse('scrapers:dashboard'))
 
-
-from django.core.paginator import Paginator
-from django.utils import timezone
-from datetime import timedelta
-from .models import ScraperLog
-
 @staff_member_required
 def view_scraper_logs(request):
     """Vista para consultar los logs de ejecución de scrapers."""
