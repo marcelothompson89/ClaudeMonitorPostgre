@@ -1,6 +1,7 @@
 # alertas/urls.py
 from django.urls import path
 from . import views
+from .views import register_view, CustomLoginView
 
 app_name = 'alertas'
 

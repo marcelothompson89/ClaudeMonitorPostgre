@@ -1,7 +1,12 @@
 # alertas/forms.py
 from django import forms
 from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 from .models import Alerta, Keyword, EmailAlertConfig
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 # Modificar el formulario AlertaFilterForm en forms.py
 class AlertaFilterForm(forms.Form):
@@ -139,3 +144,135 @@ class EmailAlertConfigForm(forms.ModelForm):
         self.fields['category'].choices = categories
         self.fields['country'].choices = countries
         self.fields['institution'].choices = institutions
+
+
+class CustomUserCreationForm(UserCreationForm):
+    # Campo de email requerido y con validación de unicidad
+    email = forms.EmailField(
+        required=True,
+        label="Correo electrónico",
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Ingrese su correo electrónico'
+        })
+    )
+    
+    # Campos para nombre y apellido
+    first_name = forms.CharField(
+        required=True,
+        label="Nombre",
+        max_length=30,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Ingrese su nombre'
+        })
+    )
+    
+    last_name = forms.CharField(
+        required=True,  # Cambiado a requerido
+        label="Apellido",
+        max_length=30,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Ingrese su apellido'
+        })
+    )
+    
+    # Username opcional - se generará a partir del email
+    username = forms.CharField(
+        required=False,
+        max_length=150,
+        widget=forms.HiddenInput()  # Oculto, ya que se generará automáticamente
+    )
+    
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name', 'last_name', 'password1', 'password2')
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Aplicar clase form-control a todos los campos
+        for fieldname in self.fields:
+            self.fields[fieldname].widget.attrs.update({'class': 'form-control'})
+    
+    def clean_email(self):
+        """Validar que el email sea único"""
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError('Este correo electrónico ya está en uso')
+        return email
+    
+    def clean_password1(self):
+        """Validación adicional de contraseña"""
+        password1 = self.cleaned_data.get('password1')
+        
+        # Validar longitud mínima
+        if password1 and len(password1) < 8:
+            raise ValidationError('La contraseña debe tener al menos 8 caracteres')
+        
+        # Validar que contenga al menos un número
+        if password1 and not any(char.isdigit() for char in password1):
+            raise ValidationError('La contraseña debe contener al menos un número')
+        
+        # Validar que contenga al menos una letra
+        if password1 and not any(char.isalpha() for char in password1):
+            raise ValidationError('La contraseña debe contener al menos una letra')
+        
+        return password1
+
+class CustomAuthenticationForm(AuthenticationForm):
+    """
+    Formulario de autenticación personalizado que solo permite iniciar sesión
+    con correo electrónico
+    """
+    username = forms.EmailField(
+        label="Correo electrónico",
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Ingrese su correo electrónico'
+        })
+    )
+    password = forms.CharField(
+        label="Contraseña",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Contraseña'
+        })
+    )
+
+    def clean(self):
+        email = self.cleaned_data.get('username')  # En realidad contiene el email
+        password = self.cleaned_data.get('password')
+
+        if email and password:
+            # Buscar el usuario por email
+            from django.contrib.auth.models import User
+            try:
+                user = User.objects.get(email=email)
+                # Usar el nombre de usuario para la autenticación
+                self.user_cache = authenticate(
+                    self.request, 
+                    username=user.username, 
+                    password=password
+                )
+                
+                if self.user_cache is None:
+                    raise forms.ValidationError(
+                        "Por favor, ingrese un correo y contraseña correctos. "
+                        "Tenga en cuenta que ambos campos pueden distinguir mayúsculas y minúsculas.",
+                        code='invalid_login',
+                    )
+                else:
+                    self.confirm_login_allowed(self.user_cache)
+            except User.DoesNotExist:
+                raise forms.ValidationError(
+                    "No existe una cuenta con este correo electrónico.",
+                    code='email_not_found',
+                )
+            except User.MultipleObjectsReturned:
+                raise forms.ValidationError(
+                    "Hay un problema con tu cuenta. Por favor contacta al administrador.",
+                    code='duplicate_email',
+                )
+        
+        return self.cleaned_data

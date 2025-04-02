@@ -66,7 +66,7 @@ async def scrape_hcdn_ar():
                         'title': titulo_texto,
                         'description': final_description,
                         'source_type': "Legislativo",
-                        'category': "Proyecto de ley",
+                        'category': "Proyecto de Ley",
                         'country': "Argentina",
                         'source_url': pdf_url,
                         'presentation_date': _parse_date(meta_dict.get("Fecha")),

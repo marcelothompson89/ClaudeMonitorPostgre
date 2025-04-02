@@ -13,6 +13,11 @@ from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.forms import AuthenticationForm
+from alertas.forms import CustomUserCreationForm
+from django.contrib.auth.views import LoginView
+from .forms import CustomAuthenticationForm
 
 import json
 import datetime
@@ -384,3 +389,53 @@ def send_email_alert(request, pk):
         messages.info(request, 'No se encontraron alertas que coincidan con los criterios configurados.')
     
     return redirect('alertas:email_alert_configs')
+
+def register_view(request):
+    """Vista para el registro de usuarios con email como identificador principal."""
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            # Crear el usuario pero no guardarlo aún
+            user = form.save(commit=False)
+            
+            # Asegurarnos que el email sea único
+            email = form.cleaned_data.get('email')
+            if User.objects.filter(email=email).exists():
+                messages.error(request, 'Este correo electrónico ya está en uso')
+                return render(request, 'register.html', {'form': form})
+            
+            # Generar username a partir del email si no se proporciona
+            if not user.username or User.objects.filter(username=user.username).exists():
+                base_username = email.split('@')[0]
+                username = base_username
+                
+                # Asegurar que sea único
+                counter = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}_{counter}"
+                    counter += 1
+                
+                user.username = username
+            
+            # Guardar el usuario
+            user.save()
+            
+            # Autenticar y loguear al usuario
+            login(request, user)
+            messages.success(request, f"¡Bienvenido, {user.first_name}! Tu cuenta ha sido creada con éxito.")
+            
+            # Redirigir al usuario a la página principal
+            return redirect('alertas:alertas_list')
+    else:
+        form = CustomUserCreationForm()
+    
+    return render(request, 'register.html', {'form': form})
+
+
+class CustomLoginView(LoginView):
+    """Vista de inicio de sesión personalizada que usa el formulario con soporte para email"""
+    form_class = CustomAuthenticationForm
+    template_name = 'login.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('alertas:alertas_list')
