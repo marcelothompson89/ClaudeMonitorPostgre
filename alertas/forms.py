@@ -135,15 +135,17 @@ class EmailAlertConfigForm(forms.ModelForm):
             self.fields['keywords'].queryset = Keyword.objects.filter(user=user, active=True)
         
         # Obtener opciones únicas de la base de datos para los filtros
-        source_types = [('', '--------')] + [(st, st) for st in Alerta.objects.values_list('source_type', flat=True).distinct().order_by('source_type')]
-        categories = [('', '--------')] + [(c, c) for c in Alerta.objects.values_list('category', flat=True).distinct().order_by('category')]
         countries = [('', '--------')] + [(c, c) for c in Alerta.objects.values_list('country', flat=True).distinct().order_by('country')]
-        institutions = [('', '--------')] + [(i, i) for i in Alerta.objects.values_list('institution', flat=True).distinct().order_by('institution')]
-        
-        self.fields['source_type'].choices = source_types
-        self.fields['category'].choices = categories
         self.fields['country'].choices = countries
+        
+        institutions = [('', '--------')] + [(i, i) for i in Alerta.objects.values_list('institution', flat=True).distinct().order_by('institution')]
         self.fields['institution'].choices = institutions
+        
+        source_types = [('', '--------')] + [(st, st) for st in Alerta.objects.values_list('source_type', flat=True).distinct().order_by('source_type')]
+        self.fields['source_type'].choices = source_types
+        
+        categories = [('', '--------')] + [(c, c) for c in Alerta.objects.values_list('category', flat=True).distinct().order_by('category')]
+        self.fields['category'].choices = categories
 
 
 class CustomUserCreationForm(UserCreationForm):

@@ -439,3 +439,22 @@ class CustomLoginView(LoginView):
     
     def get_success_url(self):
         return reverse_lazy('alertas:alertas_list')
+
+# nueva vista que devuelva las instituciones para un país específico
+@login_required
+def get_institutions_by_country(request):
+    """Vista AJAX para obtener las instituciones de un país específico."""
+    country = request.GET.get('country')
+    
+    # Construir la consulta
+    query = Alerta.objects.values_list('institution', flat=True).distinct().order_by('institution')
+    
+    # Si se proporciona un país, filtrar por ese país
+    if country:
+        query = query.filter(country=country)
+    
+    # Formar el array para el select
+    institution_choices = [('', 'Todas')]
+    institution_choices.extend([(inst, inst) for inst in query if inst])
+    
+    return JsonResponse({'institutions': institution_choices})

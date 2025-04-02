@@ -87,6 +87,20 @@
                         <p class="text-muted">Configura los filtros para las alertas que quieres recibir. Si no seleccionas un filtro, se incluirán todas las opciones.</p>
                         
                         <div class="row">
+                            <!-- Filtro de País (colocado primero) -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">{{ form.country.label }}</label>
+                                {{ form.country|add_class:"form-select" }}
+                            </div>
+                            
+                            <!-- Filtro de Institución (colocado segundo) -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.institution.id_for_label }}" class="form-label">{{ form.institution.label }}</label>
+                                {{ form.institution|add_class:"form-select" }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.source_type.id_for_label }}" class="form-label">{{ form.source_type.label }}</label>
                                 {{ form.source_type|add_class:"form-select" }}
@@ -94,17 +108,6 @@
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.category.id_for_label }}" class="form-label">{{ form.category.label }}</label>
                                 {{ form.category|add_class:"form-select" }}
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.country.id_for_label }}" class="form-label">{{ form.country.label }}</label>
-                                {{ form.country|add_class:"form-select" }}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.institution.id_for_label }}" class="form-label">{{ form.institution.label }}</label>
-                                {{ form.institution|add_class:"form-select" }}
                             </div>
                         </div>
                         
@@ -140,4 +143,38 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Función para cargar instituciones basadas en el país seleccionado
+        function loadInstitutionsByCountry(country) {
+            $.ajax({
+                url: '{% url "alertas:get_institutions_by_country" %}',
+                data: {
+                    'country': country
+                },
+                dataType: 'json',
+                success: function(data) {
+                    // Vaciar el select de instituciones
+                    $('#{{ form.institution.id_for_label }}').empty();
+                    
+                    // Agregar las nuevas opciones
+                    $.each(data.institutions, function(index, item) {
+                        $('#{{ form.institution.id_for_label }}').append(
+                            $('<option></option>').val(item[0]).html(item[1])
+                        );
+                    });
+                }
+            });
+        }
+        
+        // Evento cuando cambia el país seleccionado
+        $('#{{ form.country.id_for_label }}').change(function() {
+            var selectedCountry = $(this).val();
+            loadInstitutionsByCountry(selectedCountry);
+        });
+    });
+</script>
 {% endblock %}

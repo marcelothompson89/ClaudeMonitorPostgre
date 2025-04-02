@@ -46,14 +46,15 @@
     
 <!-- Sección de filtros en alertas_list.html -->
 <form method="get" id="filterForm">
-    <div class="filter-section">
-        <label for="id_institution" class="form-label">Institución:</label>
-        {{ form.institution }}
-    </div>
-    
+    <!-- País -->
     <div class="filter-section">
         <label for="id_country" class="form-label">País:</label>
         {{ form.country }}
+    </div>
+    <!-- Institución -->
+    <div class="filter-section">
+        <label for="id_institution" class="form-label">Institución:</label>
+        {{ form.institution }}
     </div>
     
     <!-- Nuevos filtros -->
@@ -332,6 +333,34 @@
                     alert('Ocurrió un error al cambiar el estado del filtro.');
                 }
             });
+        });
+        
+        // Función para cargar instituciones basadas en el país seleccionado
+        function loadInstitutionsByCountry(country) {
+            $.ajax({
+                url: '{% url "alertas:get_institutions_by_country" %}',
+                data: {
+                    'country': country
+                },
+                dataType: 'json',
+                success: function(data) {
+                    // Vaciar el select de instituciones
+                    $('#id_institution').empty();
+                    
+                    // Agregar las nuevas opciones
+                    $.each(data.institutions, function(index, item) {
+                        $('#id_institution').append(
+                            $('<option></option>').val(item[0]).html(item[1])
+                        );
+                    });
+                }
+            });
+        }
+        
+        // Evento cuando cambia el país seleccionado
+        $('#id_country').change(function() {
+            var selectedCountry = $(this).val();
+            loadInstitutionsByCountry(selectedCountry);
         });
     });
 </script>

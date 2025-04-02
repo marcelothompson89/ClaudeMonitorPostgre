@@ -21,4 +21,7 @@ urlpatterns = [
     path('email-alerts/<int:pk>/edit/', views.email_alert_config_edit, name='email_alert_config_edit'),
     path('email-alerts/<int:pk>/delete/', views.email_alert_config_delete, name='email_alert_config_delete'),
     path('email-alerts/<int:pk>/send/', views.send_email_alert, name='send_email_alert'),
+    
+    # Nueva URL para obtener las instituciones por país
+    path('api/institutions-by-country/', views.get_institutions_by_country, name='get_institutions_by_country'),
 ]
