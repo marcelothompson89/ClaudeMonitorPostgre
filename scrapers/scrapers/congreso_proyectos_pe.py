@@ -63,12 +63,12 @@ async def scrape_congreso_proyectos_pe():
         time.sleep(15)  # Aumentar tiempo de espera para SPAs lentas
         
         # Capturar screenshot para debugging
-        try:
-            screenshot_path = "debug_screenshot.png"
-            driver.save_screenshot(screenshot_path)
-            print(f"[Congreso Proyectos_PE] Screenshot guardado en: {os.path.abspath(screenshot_path)}")
-        except Exception as e:
-            print(f"[Congreso Proyectos_PE] No se pudo guardar screenshot: {str(e)}")
+        # try:
+        #     screenshot_path = "debug_screenshot.png"
+        #     driver.save_screenshot(screenshot_path)
+        #     print(f"[Congreso Proyectos_PE] Screenshot guardado en: {os.path.abspath(screenshot_path)}")
+        # except Exception as e:
+        #     print(f"[Congreso Proyectos_PE] No se pudo guardar screenshot: {str(e)}")
         
         # Obtener y mostrar el HTML de la página
         print("[Congreso Proyectos_PE] Obteniendo HTML de la página...")
