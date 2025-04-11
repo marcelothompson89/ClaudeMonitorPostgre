@@ -1,0 +1,21 @@
+name: Run Scrapers Every 6 Hours
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Ejecutar cada 6 horas (00:00, 06:00, 12:00, 18:00 UTC)
+  workflow_dispatch:  # Permite ejecutar manualmente desde la interfaz de GitHub
+
+jobs:
+  run-scrapers:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Trigger Scrapers Execution
+      run: |
+        curl -X POST "https://monitorregulatoriomt.onrender.com/api/run-scrapers/" \
+        -H "X-API-Key: ${{ secrets.SCRAPER_API_TOKEN }}" \
+        -H "Content-Type: application/json"
+      
+    - name: Check result
+      run: |
+        echo "Scrapers triggered at $(date)"

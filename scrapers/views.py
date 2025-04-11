@@ -4,10 +4,14 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from django.core.paginator import Paginator
 from django.utils import timezone
 from datetime import timedelta
 from .models import ScraperLog
+import hmac
+import hashlib
 
 from .tasks import run_scraper, run_all_scrapers, get_available_scrapers
 
@@ -134,3 +138,39 @@ def view_scraper_log_detail(request, log_id):
     }
     
     return render(request, 'scrapers/log_detail.html', context)
+
+
+@csrf_exempt
+@require_POST
+def run_scrapers_api(request):
+    """
+    Endpoint para ejecutar los scrapers remotamente.
+    Requiere un token de seguridad en el encabezado 'X-API-Key'.
+    """
+    # Verificar el token de seguridad
+    api_key = request.headers.get('X-API-Key', '')
+    
+    # Usa un token secreto almacenado en las variables de entorno
+    # Debes configurar SCRAPER_API_TOKEN en tu settings.py y en Render
+    expected_key = getattr(settings, 'SCRAPER_API_TOKEN', '')
+    
+    if not hmac.compare_digest(api_key, expected_key):
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Token de autenticación inválido'
+        }, status=403)
+    
+    # Ejecutar todos los scrapers
+    results = run_all_scrapers()
+    
+    return JsonResponse({
+        'status': 'success',
+        'message': 'Scrapers ejecutados correctamente',
+        'summary': {
+            'total_processed': results['summary']['total_processed'],
+            'total_created': results['summary']['total_created'],
+            'total_updated': results['summary']['total_updated'],
+            'total_errors': results['summary']['total_errors'],
+            'failures': results['summary']['failures']
+        }
+    })

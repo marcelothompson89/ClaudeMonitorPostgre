@@ -15,6 +15,7 @@ urlpatterns = [
     path('register/', register_view, name='register'), 
     path('logout/', logout_view, name='logout'), 
     path('scrapers/', include('scrapers.urls')),
+    path('', include('scrapers.urls')),
 ]
 
 

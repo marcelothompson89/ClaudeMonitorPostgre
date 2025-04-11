@@ -9,4 +9,5 @@ urlpatterns = [
     path('run/<str:scraper_id>/', views.run_specific_scraper, name='run_specific'),
     path('logs/', views.view_scraper_logs, name='logs'),
     path('logs/<int:log_id>/', views.view_scraper_log_detail, name='log_detail'),
+    path('api/run-scrapers/', views.run_scrapers_api, name='run-scrapers-api'),
 ]
