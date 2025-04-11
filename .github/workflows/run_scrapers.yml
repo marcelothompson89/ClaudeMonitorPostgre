@@ -10,12 +10,33 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Trigger Scrapers Execution
-      run: |
-        curl -X POST "https://monitorregulatoriomt.onrender.com/api/run-scrapers/" \
-        -H "X-API-Key: ${{ secrets.SCRAPER_API_TOKEN }}" \
-        -H "Content-Type: application/json"
+    - name: Checkout código
+      uses: actions/checkout@v3
       
-    - name: Check result
+    - name: Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Instalar dependencias
       run: |
-        echo "Scrapers triggered at $(date)"
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        playwright install chromium
+        
+    - name: Configurar variables de entorno
+      run: |
+        # Configura todas las variables de entorno necesarias para Django y la base de datos
+        echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+        echo "DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" >> $GITHUB_ENV
+        # Añade otras variables de entorno que necesite tu aplicación
+        
+    - name: Ejecutar scrapers
+      run: |
+        # Usar directamente el comando de Django que ya tienes configurado
+        python manage.py run_scrapers --json
+        
+    - name: Notificar resultado
+      if: always()
+      run: |
+        echo "Scrapers ejecutados con el estado: ${{ job.status }}"
