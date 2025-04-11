@@ -12,8 +12,12 @@ from datetime import timedelta
 from .models import ScraperLog
 import hmac
 import hashlib
+import logging
 
 from .tasks import run_scraper, run_all_scrapers, get_available_scrapers
+
+
+logger = logging.getLogger(__name__)
 
 @staff_member_required
 def scrapers_dashboard(request):
@@ -144,33 +148,39 @@ def view_scraper_log_detail(request, log_id):
 @require_POST
 def run_scrapers_api(request):
     """
-    Endpoint para ejecutar los scrapers remotamente.
-    Requiere un token de seguridad en el encabezado 'X-API-Key'.
+    Endpoint para iniciar la ejecución de scrapers desde GitHub Actions
     """
     # Verificar el token de seguridad
     api_key = request.headers.get('X-API-Key', '')
-    
-    # Usa un token secreto almacenado en las variables de entorno
-    # Debes configurar SCRAPER_API_TOKEN en tu settings.py y en Render
     expected_key = getattr(settings, 'SCRAPER_API_TOKEN', '')
     
-    if not hmac.compare_digest(api_key, expected_key):
+    if not expected_key:
+        logger.error("SCRAPER_API_TOKEN no configurado en settings")
         return JsonResponse({
             'status': 'error',
-            'message': 'Token de autenticación inválido'
+            'message': 'Error de configuración del servidor'
+        }, status=500)
+    
+    if not hmac.compare_digest(api_key, expected_key):
+        logger.warning("Intento de acceso con token inválido")
+        return JsonResponse({
+            'status': 'error',
+            'message': 'No autorizado'
         }, status=403)
     
-    # Ejecutar todos los scrapers
-    results = run_all_scrapers()
-    
-    return JsonResponse({
-        'status': 'success',
-        'message': 'Scrapers ejecutados correctamente',
-        'summary': {
-            'total_processed': results['summary']['total_processed'],
-            'total_created': results['summary']['total_created'],
-            'total_updated': results['summary']['total_updated'],
-            'total_errors': results['summary']['total_errors'],
-            'failures': results['summary']['failures']
-        }
-    })
+    try:
+        logger.info("Iniciando ejecución de scrapers vía API")
+        results = run_all_scrapers()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Scrapers ejecutados correctamente',
+            'summary': results['summary']
+        })
+        
+    except Exception as e:
+        logger.exception("Error al ejecutar scrapers")
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error al ejecutar scrapers: {str(e)}'
+        }, status=500)

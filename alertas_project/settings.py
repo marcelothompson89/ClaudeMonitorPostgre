@@ -165,4 +165,4 @@ LOGGING = {
     },
 }
 
-SCRAPER_API_TOKEN = os.environ.get('SCRAPER_API_TOKEN', 'token-secreto-para-desarrollo')
+SCRAPER_API_TOKEN = os.environ.get('SCRAPER_API_TOKEN', '')

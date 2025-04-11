@@ -14,8 +14,8 @@ urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
     path('register/', register_view, name='register'), 
     path('logout/', logout_view, name='logout'), 
-    path('scrapers/', include('scrapers.urls')),
-    path('', include('scrapers.urls')),
+    path('scrapers/', include('scrapers.urls', namespace='scrapers_main')),
+    path('', include('scrapers.urls', namespace='scrapers_api')),
 ]
 
 
