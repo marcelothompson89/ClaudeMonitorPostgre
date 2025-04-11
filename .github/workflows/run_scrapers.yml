@@ -2,8 +2,8 @@ name: Run Scrapers Every 6 Hours
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # Ejecutar cada 6 horas (00:00, 06:00, 12:00, 18:00 UTC)
-  workflow_dispatch:  # Permite ejecutar manualmente desde la interfaz de GitHub
+    - cron: '0 */6 * * *'  # Ejecutar cada 6 horas
+  workflow_dispatch:  # Permite ejecutar manualmente
 
 jobs:
   run-scrapers:
@@ -24,19 +24,39 @@ jobs:
         pip install -r requirements.txt
         playwright install chromium
         
-    - name: Configurar variables de entorno
+    - name: Crear archivo de configuración temporal
       run: |
-        # Configura todas las variables de entorno necesarias para Django y la base de datos
-        echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
-        echo "DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" >> $GITHUB_ENV
-        # Añade otras variables de entorno que necesite tu aplicación
+        # Creamos un archivo de configuración específico para GitHub Actions
+        cat > github_actions_settings.py << EOF
+        # Este archivo es generado automáticamente por GitHub Actions
+        # No debe ser añadido al repositorio
+
+        # Importar la configuración base
+        import os
+        import sys
+        from pathlib import Path
+
+        # Cargamos el módulo de configuración original
+        sys.path.insert(0, '.')
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'alertas_project.settings'
+
+        # Sobreescribimos sólo las variables secretas necesarias
+        # No se escribe ningún secreto en el archivo, sólo se asignan variables de entorno
+        os.environ['SECRET_KEY'] = "${{ secrets.DJANGO_SECRET_KEY }}"
+        os.environ['DATABASE_URL'] = "${{ secrets.DATABASE_URL }}"
+        os.environ['DEBUG'] = "False"
+        EOF
         
-    - name: Ejecutar scrapers
+    - name: Ejecutar scrapers con configuración segura
       run: |
-        # Usar directamente el comando de Django que ya tienes configurado
-        python manage.py run_scrapers --json
+        # Configuramos PYTHONPATH para que encuentre nuestro módulo temporal
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
         
-    - name: Notificar resultado
+        # Ejecutamos el comando con el módulo de configuración específico
+        DJANGO_SETTINGS_MODULE=github_actions_settings python manage.py run_scrapers --json
+        
+    - name: Eliminar archivo de configuración
       if: always()
       run: |
-        echo "Scrapers ejecutados con el estado: ${{ job.status }}"
+        # Siempre eliminamos el archivo de configuración temporal
+        rm -f github_actions_settings.py
