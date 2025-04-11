@@ -23,40 +23,113 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         playwright install chromium
+
+    - name: Configurar variables de entorno
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      run: |
+        # Creamos un archivo .env para las variables de entorno
+        echo "DATABASE_URL=$DATABASE_URL" > .env
+        echo "SECRET_KEY=$DJANGO_SECRET_KEY" >> .env
+        echo "DEBUG=False" >> .env
         
-    - name: Crear archivo de configuración temporal
+    - name: Crear archivo de configuración para GitHub Actions
       run: |
         # Creamos un archivo de configuración específico para GitHub Actions
         cat > github_actions_settings.py << EOF
         # Este archivo es generado automáticamente por GitHub Actions
-        # No debe ser añadido al repositorio
-
-        # Importar la configuración base
+        
         import os
         import sys
+        import dj_database_url
         from pathlib import Path
 
-        # Cargamos el módulo de configuración original
-        sys.path.insert(0, '.')
-        os.environ['DJANGO_SETTINGS_MODULE'] = 'alertas_project.settings'
+        # Cargar variables desde .env
+        from dotenv import load_dotenv
+        load_dotenv()
 
-        # Sobreescribimos sólo las variables secretas necesarias
-        # No se escribe ningún secreto en el archivo, sólo se asignan variables de entorno
-        os.environ['SECRET_KEY'] = "${{ secrets.DJANGO_SECRET_KEY }}"
-        os.environ['DATABASE_URL'] = "${{ secrets.DATABASE_URL }}"
-        os.environ['DEBUG'] = "False"
+        # Configuración básica
+        BASE_DIR = Path(__file__).resolve().parent
+        SECRET_KEY = os.environ.get('SECRET_KEY', '${{ secrets.DJANGO_SECRET_KEY }}')
+        DEBUG = False
+
+        # Configuración de la base de datos
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=os.environ.get('DATABASE_URL', '${{ secrets.DATABASE_URL }}'),
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
+
+        # Aplicaciones instaladas necesarias para los scrapers
+        INSTALLED_APPS = [
+            'django.contrib.auth',
+            'django.contrib.contenttypes',
+            'django.contrib.sessions',
+            'django.contrib.messages',
+            'django.contrib.staticfiles',
+            'alertas',
+            'scrapers',
+        ]
+
+        # Configuración mínima para ejecutar comandos
+        MIDDLEWARE = [
+            'django.middleware.security.SecurityMiddleware',
+            'django.contrib.sessions.middleware.SessionMiddleware',
+            'django.middleware.common.CommonMiddleware',
+            'django.middleware.csrf.CsrfViewMiddleware',
+            'django.contrib.auth.middleware.AuthenticationMiddleware',
+            'django.contrib.messages.middleware.MessageMiddleware',
+            'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        ]
+
+        ROOT_URLCONF = 'alertas_project.urls'
+
+        TEMPLATES = [
+            {
+                'BACKEND': 'django.template.backends.django.DjangoTemplates',
+                'DIRS': [],
+                'APP_DIRS': True,
+                'OPTIONS': {
+                    'context_processors': [
+                        'django.template.context_processors.debug',
+                        'django.template.context_processors.request',
+                        'django.contrib.auth.context_processors.auth',
+                        'django.contrib.messages.context_processors.messages',
+                    ],
+                },
+            },
+        ]
+
+        WSGI_APPLICATION = 'alertas_project.wsgi.application'
+        STATIC_URL = '/static/'
+        DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+        ALLOWED_HOSTS = ['*']
         EOF
         
-    - name: Ejecutar scrapers con configuración segura
+    - name: Ejecutar scrapers
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
       run: |
-        # Configuramos PYTHONPATH para que encuentre nuestro módulo temporal
+        # Configuramos DJANGO_SETTINGS_MODULE para usar nuestro archivo personalizado
+        export DJANGO_SETTINGS_MODULE=github_actions_settings
+        # Añadimos el directorio actual al PYTHONPATH
         export PYTHONPATH=$PYTHONPATH:$(pwd)
         
-        # Ejecutamos el comando con el módulo de configuración específico
-        DJANGO_SETTINGS_MODULE=github_actions_settings python manage.py run_scrapers --json
+        # Ejecutamos todos los scrapers y guardamos el resultado en un log
+        python manage.py run_scrapers --json > scraper_log.json
         
-    - name: Eliminar archivo de configuración
+    - name: Guardar log de ejecución como artefacto
+      uses: actions/upload-artifact@v3
+      with:
+        name: scraper-logs
+        path: scraper_log.json
+        
+    - name: Limpiar archivos temporales
       if: always()
       run: |
-        # Siempre eliminamos el archivo de configuración temporal
-        rm -f github_actions_settings.py
+        rm -f .env github_actions_settings.py scraper_log.json
