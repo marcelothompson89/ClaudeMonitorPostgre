@@ -124,7 +124,7 @@ jobs:
         python manage.py run_scrapers --json > scraper_log.json
         
     - name: Guardar log de ejecución como artefacto
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: scraper-logs
         path: scraper_log.json
