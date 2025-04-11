@@ -21,9 +21,19 @@ jobs:
     - name: Instalar dependencias
       run: |
         python -m pip install --upgrade pip
+        # Instalar dependencias explícitamente necesarias para GitHub Actions
+        pip install dj-database-url python-dotenv
+        # Instalar dependencias del proyecto
         pip install -r requirements.txt
+        # Instalar Playwright
         playwright install chromium
-
+        
+    - name: Verificar estructura de directorios
+      run: |
+        # Mostrar la estructura de directorios para depuración
+        find . -type d -name "scrapers" | sort
+        find . -type f -name "*.py" | grep -i scraper | sort
+        
     - name: Configurar variables de entorno
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -34,37 +44,37 @@ jobs:
         echo "SECRET_KEY=$DJANGO_SECRET_KEY" >> .env
         echo "DEBUG=False" >> .env
         
-    - name: Crear archivo de configuración para GitHub Actions
+    - name: Crear archivo de configuración simplificado
       run: |
-        # Creamos un archivo de configuración específico para GitHub Actions
+        # Creamos un archivo de configuración simplificado para GitHub Actions
         cat > github_actions_settings.py << EOF
         # Este archivo es generado automáticamente por GitHub Actions
         
         import os
         import sys
-        import dj_database_url
         from pathlib import Path
-
+        
         # Cargar variables desde .env
         from dotenv import load_dotenv
         load_dotenv()
-
+        
         # Configuración básica
         BASE_DIR = Path(__file__).resolve().parent
-        SECRET_KEY = os.environ.get('SECRET_KEY', '${{ secrets.DJANGO_SECRET_KEY }}')
+        SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-key-for-dev')
         DEBUG = False
-
-        # Configuración de la base de datos
+        
+        # Configuración de la base de datos usando directamente la URL de DATABASE_URL
+        import dj_database_url
         DATABASES = {
             'default': dj_database_url.config(
-                default=os.environ.get('DATABASE_URL', '${{ secrets.DATABASE_URL }}'),
-                conn_max_age=600,
-                conn_health_checks=True,
+                default=os.environ.get('DATABASE_URL'),
+                conn_max_age=600
             )
         }
-
+        
         # Aplicaciones instaladas necesarias para los scrapers
         INSTALLED_APPS = [
+            'django.contrib.admin',
             'django.contrib.auth',
             'django.contrib.contenttypes',
             'django.contrib.sessions',
@@ -73,7 +83,7 @@ jobs:
             'alertas',
             'scrapers',
         ]
-
+        
         # Configuración mínima para ejecutar comandos
         MIDDLEWARE = [
             'django.middleware.security.SecurityMiddleware',
@@ -84,9 +94,9 @@ jobs:
             'django.contrib.messages.middleware.MessageMiddleware',
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
         ]
-
+        
         ROOT_URLCONF = 'alertas_project.urls'
-
+        
         TEMPLATES = [
             {
                 'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -102,25 +112,31 @@ jobs:
                 },
             },
         ]
-
+        
         WSGI_APPLICATION = 'alertas_project.wsgi.application'
         STATIC_URL = '/static/'
         DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+        
         ALLOWED_HOSTS = ['*']
         EOF
         
+    - name: Probar importación de módulos
+      run: |
+        python -c "import sys; sys.path.insert(0, '.'); import github_actions_settings; print('Configuración cargada correctamente')"
+        python -c "import sys; sys.path.insert(0, '.'); import scrapers.tasks; print('Módulo de scrapers cargado correctamente')"
+        
     - name: Ejecutar scrapers
       env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        DJANGO_SETTINGS_MODULE: github_actions_settings
+        PYTHONPATH: ${{ github.workspace }}
       run: |
-        # Configuramos DJANGO_SETTINGS_MODULE para usar nuestro archivo personalizado
-        export DJANGO_SETTINGS_MODULE=github_actions_settings
-        # Añadimos el directorio actual al PYTHONPATH
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        # Listar los comandos disponibles para depuración
+        python manage.py help
         
-        # Ejecutamos todos los scrapers y guardamos el resultado en un log
+        # Intentar ejecutar el comando run_scrapers
+        python manage.py run_scrapers --list
+        
+        # Si el comando anterior funciona, ejecutar todos los scrapers
         python manage.py run_scrapers --json > scraper_log.json
         
     - name: Guardar log de ejecución como artefacto
@@ -128,8 +144,9 @@ jobs:
       with:
         name: scraper-logs
         path: scraper_log.json
+        retention-days: 5
         
     - name: Limpiar archivos temporales
       if: always()
       run: |
-        rm -f .env github_actions_settings.py scraper_log.json
+        rm -f .env github_actions_settings.py
