@@ -21,123 +21,223 @@ jobs:
     - name: Instalar dependencias
       run: |
         python -m pip install --upgrade pip
-        # Instalar dependencias explícitamente necesarias para GitHub Actions
-        pip install dj-database-url python-dotenv
-        # Instalar dependencias del proyecto
+        pip install requests python-dotenv
         pip install -r requirements.txt
-        # Instalar Playwright
         playwright install chromium
         
-    - name: Configurar variables de entorno
+    - name: Crear script para ejecutar scrapers
       env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-        DB_HOST: ${{ secrets.DB_HOST }}
-        DB_NAME: ${{ secrets.DB_NAME }}
-        DB_USER: ${{ secrets.DB_USER }}
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        DB_PORT: ${{ secrets.DB_PORT }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       run: |
-        # Creamos un archivo .env para las variables de entorno
-        echo "DATABASE_URL=$DATABASE_URL" > .env
-        echo "SECRET_KEY=$DJANGO_SECRET_KEY" >> .env
-        echo "DB_HOST=$DB_HOST" >> .env
-        echo "DB_NAME=$DB_NAME" >> .env
-        echo "DB_USER=$DB_USER" >> .env
-        echo "DB_PASSWORD=$DB_PASSWORD" >> .env
-        echo "DB_PORT=$DB_PORT" >> .env
-        echo "DEBUG=False" >> .env
-        
-    - name: Crear archivo de configuración simplificado
-      run: |
-        # Creamos un archivo de configuración simplificado para GitHub Actions
-        cat > github_actions_settings.py << EOF
-        # Este archivo es generado automáticamente por GitHub Actions
-        
+        cat > run_scrapers_script.py << EOF
         import os
+        import json
         import sys
-        from pathlib import Path
+        import requests
+        import asyncio
+        import importlib
+        from datetime import datetime
         
-        # Cargar variables desde .env
-        from dotenv import load_dotenv
-        load_dotenv()
+        # Importar el diccionario de scrapers disponibles
+        sys.path.append('.')
+        from scrapers.tasks import AVAILABLE_SCRAPERS
         
-        # Configuración básica
-        BASE_DIR = Path(__file__).resolve().parent
-        SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-key-for-dev')
-        DEBUG = False
+        # Configuración
+        SUPABASE_URL = os.environ.get('SUPABASE_URL')
+        SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
         
-        # Configuración directa de la base de datos Supabase (PostgreSQL)
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': os.environ.get('DB_NAME'),
-                'USER': os.environ.get('DB_USER'),
-                'PASSWORD': os.environ.get('DB_PASSWORD'),
-                'HOST': os.environ.get('DB_HOST'),
-                'PORT': os.environ.get('DB_PORT', '5432'),
-                'OPTIONS': {'sslmode': 'require'},
+        # Verificar que tenemos las credenciales
+        if not SUPABASE_URL or not SUPABASE_KEY:
+            print("Error: Faltan credenciales de Supabase")
+            sys.exit(1)
+        
+        # Función para ejecutar un scraper específico
+        async def run_scraper(scraper_id, scraper_info):
+            try:
+                # Importar dinámicamente el módulo y función del scraper
+                module = importlib.import_module(scraper_info['module'])
+                scraper_function = getattr(module, scraper_info['function'])
+                
+                # Ejecutar el scraper (asumiendo que son funciones asíncronas)
+                print(f"Ejecutando scraper: {scraper_info['name']}")
+                items = await scraper_function()
+                
+                return {
+                    'id': scraper_id,
+                    'name': scraper_info['name'],
+                    'success': True,
+                    'items': items,
+                    'items_count': len(items),
+                    'error': None
+                }
+            except Exception as e:
+                error_msg = f"Error ejecutando scraper {scraper_id}: {str(e)}"
+                print(error_msg)
+                return {
+                    'id': scraper_id,
+                    'name': scraper_info.get('name', scraper_id),
+                    'success': False,
+                    'items': [],
+                    'items_count': 0,
+                    'error': error_msg
+                }
+        
+        # Función para enviar datos a Supabase
+        def send_to_supabase(items):
+            if not items:
+                print("No hay items para enviar")
+                return True
+                
+            headers = {
+                "apikey": SUPABASE_KEY,
+                "Authorization": f"Bearer {SUPABASE_KEY}",
+                "Content-Type": "application/json",
+                "Prefer": "resolution=merge-duplicates"
             }
-        }
+            
+            url = f"{SUPABASE_URL}/rest/v1/alertas"
+            
+            # Preparar los datos para Supabase según el modelo Alerta
+            processed_items = []
+            for item in items:
+                # Convertir fechas a formato ISO string si es necesario
+                presentation_date = item.get("presentation_date")
+                if presentation_date and not isinstance(presentation_date, str):
+                    try:
+                        presentation_date = presentation_date.isoformat()
+                    except:
+                        presentation_date = str(presentation_date)
+                
+                # Mapear los datos al modelo Alerta
+                processed_item = {
+                    "title": item.get("title", ""),
+                    "description": item.get("description", ""),
+                    "source_type": item.get("source_type", ""),
+                    "category": item.get("category", ""),
+                    "country": item.get("country", ""),
+                    "source_url": item.get("source_url", ""),
+                    "institution": item.get("institution", ""),
+                    "presentation_date": presentation_date,
+                }
+                
+                # Añadir campos de metadatos si existen
+                if "metadata" in item and item["metadata"]:
+                    if "image_url" in item["metadata"]:
+                        processed_item["metadata_nota_url"] = item["metadata"].get("image_url")
+                    if "publicacion_url" in item["metadata"]:
+                        processed_item["metadata_publicacion_url"] = item["metadata"].get("publicacion_url")
+                
+                processed_items.append(processed_item)
+            
+            try:
+                # Dividir en lotes si hay muchos items (para evitar payloads demasiado grandes)
+                batch_size = 100
+                success = True
+                
+                for i in range(0, len(processed_items), batch_size):
+                    batch = processed_items[i:i + batch_size]
+                    print(f"Enviando lote de {len(batch)} items a Supabase ({i+1}-{i+len(batch)} de {len(processed_items)})")
+                    
+                    response = requests.post(
+                        url,
+                        headers=headers,
+                        json=batch
+                    )
+                    
+                    if response.status_code not in (200, 201, 204):
+                        print(f"Error enviando lote: {response.status_code} - {response.text}")
+                        success = False
+                
+                return success
+            except Exception as e:
+                print(f"Error al enviar datos a Supabase: {str(e)}")
+                return False
         
-        # Aplicaciones instaladas necesarias para los scrapers
-        INSTALLED_APPS = [
-            'django.contrib.admin',
-            'django.contrib.auth',
-            'django.contrib.contenttypes',
-            'django.contrib.sessions',
-            'django.contrib.messages',
-            'django.contrib.staticfiles',
-            'alertas',
-            'scrapers',
-        ]
+        # Función principal que ejecuta todos los scrapers
+        async def run_all_scrapers():
+            print(f"Iniciando ejecución de {len(AVAILABLE_SCRAPERS)} scrapers...")
+            
+            # Ejecutar scrapers en paralelo (con límite para no sobrecargar)
+            results = []
+            
+            # Para evitar problemas, ejecutamos los scrapers en grupos de 5
+            batch_size = 5
+            scrapers_items = list(AVAILABLE_SCRAPERS.items())
+            
+            for i in range(0, len(scrapers_items), batch_size):
+                batch = scrapers_items[i:i + batch_size]
+                print(f"Ejecutando lote de {len(batch)} scrapers ({i+1}-{i+len(batch)} de {len(scrapers_items)})")
+                
+                # Crear tareas para este lote
+                tasks = [run_scraper(scraper_id, scraper_info) for scraper_id, scraper_info in batch]
+                batch_results = await asyncio.gather(*tasks)
+                results.extend(batch_results)
+            
+            # Estadísticas
+            success_count = sum(1 for r in results if r['success'])
+            failure_count = sum(1 for r in results if not r['success'])
+            total_items = sum(r['items_count'] for r in results)
+            
+            print(f"Ejecución de scrapers completada: {success_count} exitosos, {failure_count} fallidos")
+            print(f"Total de items obtenidos: {total_items}")
+            
+            # Recopilar todos los items para enviar a Supabase
+            all_items = []
+            for result in results:
+                if result['success'] and result['items']:
+                    all_items.extend(result['items'])
+            
+            # Enviar todos los items a Supabase
+            if all_items:
+                print(f"Enviando {len(all_items)} items a Supabase...")
+                supabase_success = send_to_supabase(all_items)
+                if supabase_success:
+                    print("Datos enviados con éxito a Supabase")
+                else:
+                    print("Error enviando datos a Supabase")
+            else:
+                print("No hay items para enviar a Supabase")
+            
+            # Crear informe
+            report = {
+                "timestamp": datetime.now().isoformat(),
+                "scrapers_count": len(AVAILABLE_SCRAPERS),
+                "success_count": success_count,
+                "failure_count": failure_count,
+                "total_items": total_items,
+                "results": [
+                    {
+                        "id": r['id'],
+                        "name": r['name'],
+                        "success": r['success'],
+                        "items_count": r['items_count'],
+                        "error": r['error']
+                    }
+                    for r in results
+                ]
+            }
+            
+            # Guardar informe
+            with open("scraper_log.json", "w") as f:
+                json.dump(report, f, indent=2, default=str)
+            
+            print("Informe guardado en scraper_log.json")
+            
+            return success_count, failure_count
         
-        # Configuración mínima para ejecutar comandos
-        MIDDLEWARE = [
-            'django.middleware.security.SecurityMiddleware',
-            'django.contrib.sessions.middleware.SessionMiddleware',
-            'django.middleware.common.CommonMiddleware',
-            'django.middleware.csrf.CsrfViewMiddleware',
-            'django.contrib.auth.middleware.AuthenticationMiddleware',
-            'django.contrib.messages.middleware.MessageMiddleware',
-            'django.middleware.clickjacking.XFrameOptionsMiddleware',
-        ]
-        
-        ROOT_URLCONF = 'alertas_project.urls'
-        
-        TEMPLATES = [
-            {
-                'BACKEND': 'django.template.backends.django.DjangoTemplates',
-                'DIRS': [],
-                'APP_DIRS': True,
-                'OPTIONS': {
-                    'context_processors': [
-                        'django.template.context_processors.debug',
-                        'django.template.context_processors.request',
-                        'django.contrib.auth.context_processors.auth',
-                        'django.contrib.messages.context_processors.messages',
-                    ],
-                },
-            },
-        ]
-        
-        WSGI_APPLICATION = 'alertas_project.wsgi.application'
-        STATIC_URL = '/static/'
-        DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-        
-        ALLOWED_HOSTS = ['*']
+        # Punto de entrada
+        if __name__ == "__main__":
+            success, failures = asyncio.run(run_all_scrapers())
+            sys.exit(0 if failures == 0 else 1)
         EOF
         
-    - name: Ejecutar scrapers
+    - name: Ejecutar scrapers y enviar a Supabase
       env:
-        DJANGO_SETTINGS_MODULE: github_actions_settings
-        PYTHONPATH: ${{ github.workspace }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       run: |
-        # Probar la conexión a la base de datos
-        python -c "import django; django.setup(); from django.db import connection; cursor = connection.cursor(); cursor.execute('SELECT 1'); print('Conexión a la base de datos exitosa')"
-        
-        # Ejecutar todos los scrapers y guardar los resultados en formato JSON
-        python manage.py run_scrapers --json > scraper_log.json
+        python run_scrapers_script.py
         
     - name: Guardar log de ejecución como artefacto
       uses: actions/upload-artifact@v4
@@ -149,4 +249,4 @@ jobs:
     - name: Limpiar archivos temporales
       if: always()
       run: |
-        rm -f .env github_actions_settings.py
+        rm -f run_scrapers_script.py
