@@ -16,7 +16,7 @@ jobs:
     - name: Configurar Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-version: '3.12'
         
     - name: Instalar dependencias
       run: |
@@ -27,12 +27,6 @@ jobs:
         pip install -r requirements.txt
         # Instalar Playwright
         playwright install chromium
-        
-    - name: Verificar estructura de directorios
-      run: |
-        # Mostrar la estructura de directorios para depuración
-        find . -type d -name "scrapers" | sort
-        find . -type f -name "*.py" | grep -i scraper | sort
         
     - name: Configurar variables de entorno
       env:
@@ -120,23 +114,12 @@ jobs:
         ALLOWED_HOSTS = ['*']
         EOF
         
-    - name: Probar importación de módulos
-      run: |
-        python -c "import sys; sys.path.insert(0, '.'); import github_actions_settings; print('Configuración cargada correctamente')"
-        python -c "import sys; sys.path.insert(0, '.'); import scrapers.tasks; print('Módulo de scrapers cargado correctamente')"
-        
     - name: Ejecutar scrapers
       env:
         DJANGO_SETTINGS_MODULE: github_actions_settings
         PYTHONPATH: ${{ github.workspace }}
       run: |
-        # Listar los comandos disponibles para depuración
-        python manage.py help
-        
-        # Intentar ejecutar el comando run_scrapers
-        python manage.py run_scrapers --list
-        
-        # Si el comando anterior funciona, ejecutar todos los scrapers
+        # Ejecutar todos los scrapers y guardar los resultados en formato JSON
         python manage.py run_scrapers --json > scraper_log.json
         
     - name: Guardar log de ejecución como artefacto
