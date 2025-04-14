@@ -21,7 +21,7 @@ jobs:
     - name: Instalar dependencias
       run: |
         python -m pip install --upgrade pip
-        pip install requests python-dotenv
+        pip install requests python-dotenv asyncio
         pip install -r requirements.txt
         playwright install chromium
         
@@ -30,7 +30,7 @@ jobs:
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       run: |
-        cat > run_scrapers_script.py << EOF
+        cat > run_scrapers_standalone.py << EOF
         import os
         import json
         import sys
@@ -39,9 +39,64 @@ jobs:
         import importlib
         from datetime import datetime
         
-        # Importar el diccionario de scrapers disponibles
-        sys.path.append('.')
-        from scrapers.tasks import AVAILABLE_SCRAPERS
+        # Definir directamente los scrapers disponibles aquí para evitar dependencias de Django
+        AVAILABLE_SCRAPERS = {
+            'argentina_anmat': {
+                'module': 'scrapers.scrapers.anmat_noti_ar',
+                'function': 'scrape_anmat_noti_ar',
+                'name': 'ANMAT Argentina',
+                'description': 'Obtiene noticias de ANMAT Argentina'
+            },
+            'mexico_animalpolitico': {
+                'module': 'scrapers.scrapers.animalpolitico_mx',
+                'function': 'scrape_animal_politico_salud',
+                'name': 'Animal Político México',
+                'description': 'Obtiene noticias del diario Animal Político México'
+            },
+            'chile_anamed': {
+                'module': 'scrapers.scrapers.anamed_cl',
+                'function': 'scrape_anamed_cl',
+                'name': 'ANAMED Chile',
+                'description': 'Obtiene alertas de ANAMED Chile'
+            },
+            'brasil_anvisa_normas': {
+                'module': 'scrapers.scrapers.anvisa_normas_br',
+                'function': 'scrape_anvisa_normas_br',
+                'name': 'ANVISA Normas de Brasil',
+                'description': 'Obtiene normas de ANVISA Brasil'
+            },
+            'brasil_anvisa_noticias': {
+                'module': 'scrapers.scrapers.anvisa_noti_br',
+                'function': 'scrape_anvisa_noti_br',
+                'name': 'ANVISA Noticias de Brasil',
+                'description': 'Obtiene noticias de ANVISA Brasil'
+            },
+            'argentina_boletinoficial': {
+                'module': 'scrapers.scrapers.boletinoficial_ar',
+                'function': 'scrape_boletin_oficial_ar',
+                'name': 'Boletín Oficial de Argentina',
+                'description': 'Obtiene avises de Boletín Oficial de Argentina'
+            },
+            'cepal_reg': {
+                'module': 'scrapers.scrapers.cepal_reg',
+                'function': 'scrape_cepal_noticias_reg',
+                'name': 'CEPAL Regional',
+                'description': 'Obtiene noticias de CEPAL Regional'
+            },
+            'mexico_cofepris_noticias': {
+                'module': 'scrapers.scrapers.cofepris_noti_mx',
+                'function': 'scrape_cofepris_noti_mx',
+                'name': 'COFEPRIS Noticias de México',
+                'description': 'Obtiene noticias de COFEPRIS México'
+            },
+            'peru_congreso_comunicaciones': {
+                'module': 'scrapers.scrapers.congreso_comu_pe',
+                'function': 'scrape_congreso_comu_pe',
+                'name': 'Comunicaciones Congreso de Perú',
+                'description': 'Obtiene Comunicaciones  del Congreso de Perú'
+            }
+            # Añadir más scrapers según sea necesario
+        }
         
         # Configuración
         SUPABASE_URL = os.environ.get('SUPABASE_URL')
@@ -161,8 +216,8 @@ jobs:
             # Ejecutar scrapers en paralelo (con límite para no sobrecargar)
             results = []
             
-            # Para evitar problemas, ejecutamos los scrapers en grupos de 5
-            batch_size = 5
+            # Para evitar problemas, ejecutamos los scrapers en grupos de 3
+            batch_size = 3
             scrapers_items = list(AVAILABLE_SCRAPERS.items())
             
             for i in range(0, len(scrapers_items), batch_size):
@@ -237,7 +292,7 @@ jobs:
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       run: |
-        python run_scrapers_script.py
+        python run_scrapers_standalone.py
         
     - name: Guardar log de ejecución como artefacto
       uses: actions/upload-artifact@v4
@@ -249,4 +304,4 @@ jobs:
     - name: Limpiar archivos temporales
       if: always()
       run: |
-        rm -f run_scrapers_script.py
+        rm -f run_scrapers_standalone.py
