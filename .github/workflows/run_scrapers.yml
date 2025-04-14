@@ -16,7 +16,7 @@ jobs:
     - name: Configurar Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.12'
+        python-version: '3.10'
         
     - name: Instalar dependencias
       run: |
@@ -32,10 +32,20 @@ jobs:
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_PORT: ${{ secrets.DB_PORT }}
       run: |
         # Creamos un archivo .env para las variables de entorno
         echo "DATABASE_URL=$DATABASE_URL" > .env
         echo "SECRET_KEY=$DJANGO_SECRET_KEY" >> .env
+        echo "DB_HOST=$DB_HOST" >> .env
+        echo "DB_NAME=$DB_NAME" >> .env
+        echo "DB_USER=$DB_USER" >> .env
+        echo "DB_PASSWORD=$DB_PASSWORD" >> .env
+        echo "DB_PORT=$DB_PORT" >> .env
         echo "DEBUG=False" >> .env
         
     - name: Crear archivo de configuración simplificado
@@ -57,13 +67,17 @@ jobs:
         SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-key-for-dev')
         DEBUG = False
         
-        # Configuración de la base de datos usando directamente la URL de DATABASE_URL
-        import dj_database_url
+        # Configuración directa de la base de datos Supabase (PostgreSQL)
         DATABASES = {
-            'default': dj_database_url.config(
-                default=os.environ.get('DATABASE_URL'),
-                conn_max_age=600
-            )
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.environ.get('DB_NAME'),
+                'USER': os.environ.get('DB_USER'),
+                'PASSWORD': os.environ.get('DB_PASSWORD'),
+                'HOST': os.environ.get('DB_HOST'),
+                'PORT': os.environ.get('DB_PORT', '5432'),
+                'OPTIONS': {'sslmode': 'require'},
+            }
         }
         
         # Aplicaciones instaladas necesarias para los scrapers
@@ -119,6 +133,9 @@ jobs:
         DJANGO_SETTINGS_MODULE: github_actions_settings
         PYTHONPATH: ${{ github.workspace }}
       run: |
+        # Probar la conexión a la base de datos
+        python -c "import django; django.setup(); from django.db import connection; cursor = connection.cursor(); cursor.execute('SELECT 1'); print('Conexión a la base de datos exitosa')"
+        
         # Ejecutar todos los scrapers y guardar los resultados en formato JSON
         python manage.py run_scrapers --json > scraper_log.json
         
