@@ -149,7 +149,7 @@ async def scrape_minsalud_resoluciones_co():
                     "country": "Colombia",
                     "category": "Resoluciones",
                     "presentation_date": extracted_date,
-                    "institution": "Ministerio Salud Colombia",
+                    "institution": "Ministerio de Salud Colombia",
                     "metadata": json.dumps({"año": year, "categoría": category})
                 }
 

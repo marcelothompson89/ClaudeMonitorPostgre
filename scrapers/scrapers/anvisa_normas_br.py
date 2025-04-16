@@ -1,111 +1,45 @@
 import asyncio
-import httpx
+from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
-from datetime import datetime
-import re
-import json  # Importa el módulo json para formatear la salida
 
-
-async def scrape_anvisa_normas_br():
-    """
-    Scraper para la página de ANVISA adaptado al estilo de la app.
-    """
-    url = "https://anvisalegis.datalegis.net/action/ActionDatalegis.php?acao=abrirEmentario&cod_modulo=293&cod_menu=8499"
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-
-    async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
+async def scrape_with_playwright():
+    async with async_playwright() as p:
+        # Lanzar Chromium en modo visible para probar y evitar posibles bloqueos por automatización.
+        browser = await p.chromium.launch(headless=False)
+        context = await browser.new_context(
+            viewport={"width": 1920, "height": 1080},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"
+        )
+        page = await context.new_page()
+        url = "https://anvisalegis.datalegis.net/action/ActionDatalegis.php?acao=abrirEmentario&cod_modulo=293&cod_menu=8499"
+        
+        # Navegar a la URL y esperar que la red esté inactiva
+        await page.goto(url, wait_until="networkidle", timeout=60000)
+        
+        # Esperar a que aparezca algún selector característico, por ejemplo: un artículo (si se espera que aparezca "article.ato")
         try:
-            # Intentar realizar la solicitud con reintentos
-            for intento in range(3):
-                try:
-                    response = await client.get(url, headers=headers)
-                    response.raise_for_status()
-                    break
-                except httpx.RequestError as e:
-                    print(f"Error en el intento {intento + 1}: {e}")
-            else:
-                print("Todos los intentos fallaron. Abortando.")
-                return []
-
-            soup = BeautifulSoup(response.text, "html.parser")
-
-            # Seleccionar todas las secciones del contenedor principal
-            secciones = soup.select("#tdAtosResenha > *")
-            fecha_actual = None  # Variable para almacenar la fecha vigente
-            items = []
-
-            for elemento in secciones:
-                # Identificar y actualizar la fecha
-                if "resenhaTitulo" in elemento.get("class", []):
-                    fecha_tag = elemento.find("span")
-                    if fecha_tag and "Data:" in fecha_tag.text:
-                        fecha_texto = fecha_tag.text.replace("Data:", "").strip()
-                        try:
-                            fecha_actual = datetime.strptime(fecha_texto, "%d/%m/%Y")
-                            print(f"Fecha actualizada: {fecha_actual}")
-                        except ValueError:
-                            print(f"Fecha inválida: {fecha_texto}")
-                            fecha_actual = None
-
-                # Procesar artículos
-                elif "ato" in elemento.get("class", []):
-                    if not fecha_actual:
-                        print("Error: No se encontró una fecha válida antes de procesar los artículos.")
-                        continue
-
-                    try:
-                        # Extraer enlace
-                        link_tag = elemento.find("a", class_="link")
-                        enlace = link_tag["href"] if link_tag else None
-                        url_completa = f"https://anvisalegis.datalegis.net{enlace}" if enlace else None
-
-                        # Extraer título
-                        titulo_tag = link_tag.find("strong") if link_tag else None
-                        titulo = titulo_tag.text.strip() if titulo_tag else "Sin título"
-
-                        # Extraer descripción
-                        descripcion_tag = link_tag.find_all("p") if link_tag else []
-                        descripcion = " ".join(p.text.strip() for p in descripcion_tag)
-
-                        # Extraer metadatos adicionales (Nota y Publicación)
-                        nota_url = elemento.find("a", text=re.compile('Nota', re.I))
-                        publicacion_url = elemento.find("a", text=re.compile('Publicação', re.I))
-
-                        # Crear el diccionario del item
-                        item = {
-                            'title': titulo,
-                            'description': descripcion,
-                            'source_type': "Ejecutivo",
-                            'category': "Normas",
-                            'country': "Brasil",
-                            'source_url': url_completa,
-                            'presentation_date': fecha_actual,  # Pasamos el objeto datetime directamente
-                            'metadata': {
-                                'nota_url': nota_url.get('href') if nota_url else None,
-                                'publicacion_url': publicacion_url.get('href') if publicacion_url else None
-                            },
-                            'institution': "ANVISA Brasil"
-                        }
-                        items.append(item)
-
-                    except Exception as e:
-                        print(f"Error procesando un artículo: {e}")
-
-            return items
-
+            await page.wait_for_selector("article.ato", timeout=30000)
         except Exception as e:
-            print(f"Error general: {e}")
-            return []
+            print("Timeout esperando los elementos 'article.ato':", e)
+        
+        # Simular un scroll para activar el lazy load
+        await page.evaluate("window.scrollTo(0, document.body.scrollHeight);")
+        # Simula también un pequeño movimiento del ratón
+        await page.mouse.move(100, 100)
+        # Espera adicional para que se cargue cualquier contenido asíncrono
+        await page.wait_for_timeout(5000)
+        
+        html = await page.content()
+        await browser.close()
+        
+        soup = BeautifulSoup(html, 'html.parser')
+        snippet = soup.prettify()[:500]
+        print("Snippet del HTML renderizado:")
+        print(snippet)
+        return soup
 
+async def main():
+    await scrape_with_playwright()
 
-#if __name__ == "__main__":
-    # Ejecutar el scraper y mostrar los resultados
-#    items = asyncio.run(scrape_anvisa())
-
-    # Formatear salida como JSON
-#    print(json.dumps([{
-#        **item,
-#        'presentation_date': item['presentation_date'].strftime('%Y-%m-%d') if item['presentation_date'] else None
-#    } for item in items], indent=4, ensure_ascii=False))
+if __name__ == "__main__":
+    asyncio.run(main())

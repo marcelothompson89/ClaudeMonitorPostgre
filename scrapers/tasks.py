@@ -301,6 +301,13 @@ AVAILABLE_SCRAPERS = {
         'name': 'WTO Eping Global',
         'description': 'Obtiene noticias de WTO Eping Global'
     },
+    'argentina_anmat': {
+        'module': 'scrapers.scrapers.anmat_alertas_ar',
+        'function': 'scrape_anmat_alertas_ar',
+        'name': 'ANMAT Argentina Alertas',
+        'description': 'Obtiene alertas de ANMAT Argentina'
+    },
+    
     # Añade más scrapers aquí usando el mismo formato
     # 'otro_scraper': {
     #     'module': 'scrapers.scrapers.otro_scraper',
