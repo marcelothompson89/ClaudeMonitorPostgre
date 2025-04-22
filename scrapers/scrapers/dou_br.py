@@ -93,8 +93,8 @@ async def scrape_dou_br():
     return items
 
 
-# if __name__ == "__main__":
-#     items = asyncio.run(scrape_dou_br())
+if __name__ == "__main__":
+    items = asyncio.run(scrape_dou_br())
 
-#     for item in items:
-#         print(item)
+    for item in items:
+        print(item)

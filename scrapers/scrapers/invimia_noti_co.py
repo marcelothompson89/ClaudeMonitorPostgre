@@ -79,12 +79,12 @@ async def scrape_invima_noticias_co():
     return items
 
 
-# if __name__ == "__main__":
-#     # Ejecutar el scraper y mostrar los resultados
-#     items = asyncio.run(scrape_invima_noticias())
+if __name__ == "__main__":
+    # Ejecutar el scraper y mostrar los resultados
+    items = asyncio.run(scrape_invima_noticias_co())
 
-#     # Formatear salida como JSON
-#     print(json.dumps([{
-#         **item,
-#         'presentation_date': item['presentation_date'].strftime('%Y-%m-%d') if item['presentation_date'] else None
-#     } for item in items], indent=4, ensure_ascii=False))
+    # Formatear salida como JSON
+    print(json.dumps([{
+        **item,
+        'presentation_date': item['presentation_date'].strftime('%Y-%m-%d') if item['presentation_date'] else None
+    } for item in items], indent=4, ensure_ascii=False))

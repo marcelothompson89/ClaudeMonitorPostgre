@@ -256,11 +256,11 @@ async def scrape_minsalud_noticias_co():
             except Exception as e:
                 print(f"Error procesando noticia: {e}")
 
-        # Tomar una captura de pantalla para depuración
-        await page.screenshot(path="minsalud_screenshot.png")
-        print("[MINSALUD NOTICIAS_CO] Captura de pantalla guardada como 'minsalud_screenshot.png'")
+        # # Tomar una captura de pantalla para depuración
+        # await page.screenshot(path="minsalud_screenshot.png")
+        # print("[MINSALUD NOTICIAS_CO] Captura de pantalla guardada como 'minsalud_screenshot.png'")
         
-        await browser.close()
+        # await browser.close()
 
     return items
 

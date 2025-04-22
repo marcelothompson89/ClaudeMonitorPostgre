@@ -307,6 +307,12 @@ AVAILABLE_SCRAPERS = {
         'name': 'ANMAT Argentina Alertas',
         'description': 'Obtiene alertas de ANMAT Argentina'
     },
+    'senasica_noti_mx': {
+        'module': 'scrapers.scrapers.senasica_noti_mx',
+        'function': 'scrape_senasica_noti_mx',
+        'name': 'SENASICA Noticias de México',
+        'description': 'Obtiene noticias de SENASICA de México'
+    },
     
     # Añade más scrapers aquí usando el mismo formato
     # 'otro_scraper': {

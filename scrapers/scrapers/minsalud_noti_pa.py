@@ -108,10 +108,10 @@ def _parse_date(fecha_str):
         return datetime.now().date()
 
 
-# if __name__ == "__main__":
-#     # Ejecutar el scraper y mostrar los resultados en JSON
-#     noticias = asyncio.run(scrape_minsa_noticias())
-#     print(json.dumps([{
-#         **noticia,
-#         'presentation_date': noticia['presentation_date'].strftime('%Y-%m-%d') if noticia['presentation_date'] else None
-#     } for noticia in noticias], indent=4, ensure_ascii=False))
+if __name__ == "__main__":
+    # Ejecutar el scraper y mostrar los resultados en JSON
+    noticias = asyncio.run(scrape_minsa_noti_pa())
+    print(json.dumps([{
+        **noticia,
+        'presentation_date': noticia['presentation_date'].strftime('%Y-%m-%d') if noticia['presentation_date'] else None
+    } for noticia in noticias], indent=4, ensure_ascii=False))

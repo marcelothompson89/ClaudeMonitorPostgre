@@ -1,45 +1,78 @@
-import asyncio
 from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
+import asyncio
+import json
 
-async def scrape_with_playwright():
+async def scrape_anvisa_legis_dom():
+    """
+    Scraper que renderiza el JavaScript completo en Playwright usando
+    el navegador Chrome instalado localmente para evitar detección.
+    Extrae los <article class="ato"> del DOM ya pintado.
+    """
+    base_url = "https://anvisalegis.datalegis.net"
+    open_url = (
+        f"{base_url}/action/ActionDatalegis.php"
+        f"?acao=abrirEmentario&cod_modulo=293&cod_menu=8499"
+    )
+
     async with async_playwright() as p:
-        # Lanzar Chromium en modo visible para probar y evitar posibles bloqueos por automatización.
-        browser = await p.chromium.launch(headless=False)
-        context = await browser.new_context(
-            viewport={"width": 1920, "height": 1080},
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"
-        )
-        page = await context.new_page()
-        url = "https://anvisalegis.datalegis.net/action/ActionDatalegis.php?acao=abrirEmentario&cod_modulo=293&cod_menu=8499"
-        
-        # Navegar a la URL y esperar que la red esté inactiva
-        await page.goto(url, wait_until="networkidle", timeout=60000)
-        
-        # Esperar a que aparezca algún selector característico, por ejemplo: un artículo (si se espera que aparezca "article.ato")
-        try:
-            await page.wait_for_selector("article.ato", timeout=30000)
-        except Exception as e:
-            print("Timeout esperando los elementos 'article.ato':", e)
-        
-        # Simular un scroll para activar el lazy load
-        await page.evaluate("window.scrollTo(0, document.body.scrollHeight);")
-        # Simula también un pequeño movimiento del ratón
-        await page.mouse.move(100, 100)
-        # Espera adicional para que se cargue cualquier contenido asíncrono
-        await page.wait_for_timeout(5000)
-        
+        # 1) Usa Chrome real en lugar de Chromium
+        browser = await p.chromium.launch(channel="chrome", headless=False)
+        page = await browser.new_page()
+        await page.set_viewport_size({"width": 1280, "height": 800})
+
+        # 2) Carga página y espera que la red se estabilice
+        await page.goto(open_url, wait_until="networkidle")
+        # 3) Simula interacción para disparar JS/lazy-loads
+        await page.mouse.click(100, 100)
+        # 4) Espera hasta que los actos estén presentes (máx. 2 min)
+        await page.wait_for_selector("article.ato", timeout=120000)
+
+        # 5) Captura el HTML renderizado
         html = await page.content()
         await browser.close()
-        
-        soup = BeautifulSoup(html, 'html.parser')
-        snippet = soup.prettify()[:500]
-        print("Snippet del HTML renderizado:")
-        print(snippet)
-        return soup
 
-async def main():
-    await scrape_with_playwright()
+    # 6) Parséalo con BeautifulSoup
+    soup = BeautifulSoup(html, "html.parser")
+    items = []
+
+    # Fecha general
+    fecha_general = None
+    fecha_tag = soup.select_one("div.resenhaTitulo span")
+    if fecha_tag:
+        text = fecha_tag.get_text(strip=True)
+        try:
+            from datetime import datetime
+            fecha_general = datetime.strptime(text, "%d/%m/%Y").date().isoformat()
+        except ValueError:
+            fecha_general = text
+
+    # Extrae cada acto
+    for art in soup.select("article.ato"):
+        link = art.select_one(".ementa a.link")
+        if not link:
+            continue
+        title = link.select_one("strong").get_text(strip=True)
+        status_tag = link.select_one("span.ico-situacao")
+        status = status_tag.get_text(strip=True) if status_tag else None
+        description = "\n".join(
+            p.get_text(strip=True)
+            for p in link.find_all("p")
+            if p.get_text(strip=True)
+        )
+        href = link.get("href")
+        source_url = base_url + href if href else None
+
+        items.append({
+            "title": title,
+            "status": status,
+            "description": description,
+            "source_url": source_url,
+            "presentation_date": fecha_general
+        })
+
+    return items
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    datos = asyncio.run(scrape_anvisa_legis_dom())
+    print(json.dumps(datos, indent=4, ensure_ascii=False))

@@ -217,19 +217,19 @@ async def scrape_minsalud_noti_gt():
 
         except Exception as e:
             print(f"[MSPAS Noticias_GT] ❌ Error: {str(e)}")
-            # Guardar captura de pantalla en caso de error
-            try:
-                os.makedirs("debug", exist_ok=True)
-                await page.screenshot(path="debug/error_page.png")
-                content = await page.content()
-                with open("debug/error_page.html", "w", encoding="utf-8") as f:
-                    f.write(content)
-                print("[MSPAS Noticias_GT] Se guardaron archivos de diagnóstico en la carpeta 'debug'")
-            except:
-                pass
-            return []
-        finally:
-            await browser.close()
+        #     # Guardar captura de pantalla en caso de error
+        #     try:
+        #         os.makedirs("debug", exist_ok=True)
+        #         await page.screenshot(path="debug/error_page.png")
+        #         content = await page.content()
+        #         with open("debug/error_page.html", "w", encoding="utf-8") as f:
+        #             f.write(content)
+        #         print("[MSPAS Noticias_GT] Se guardaron archivos de diagnóstico en la carpeta 'debug'")
+        #     except:
+        #         pass
+        #     return []
+        # finally:
+        #     await browser.close()
 
 
 def _parse_date(fecha_str):

@@ -80,9 +80,9 @@ async def scrape_cofepris_noti_mx():
     return items
 
 
-# if __name__ == "__main__":
-#     # Ejecutar el scraper de forma asíncrona
-#     items = asyncio.run(scrape_cofepris_mx())
+if __name__ == "__main__":
+    # Ejecutar el scraper de forma asíncrona
+    items = asyncio.run(scrape_cofepris_noti_mx())
 
-#     # Formatear salida como JSON para visualizar los datos
-#     print(json.dumps(items, indent=4, default=str, ensure_ascii=False))
+    # Formatear salida como JSON para visualizar los datos
+    print(json.dumps(items, indent=4, default=str, ensure_ascii=False))
