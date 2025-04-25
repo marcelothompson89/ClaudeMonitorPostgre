@@ -73,12 +73,12 @@ async def scrape_senado_noti_ar():
     return items
 
 
-# if __name__ == "__main__":
-#     # Ejecutar el scraper y mostrar los resultados
-#     items = asyncio.run(scrape_senado_eventos())
+if __name__ == "__main__":
+    # Ejecutar el scraper y mostrar los resultados
+    items = asyncio.run(scrape_senado_noti_ar())
 
-#     # Formatear salida como JSON
-#     print(json.dumps([{
-#         **item,
-#         'presentation_date': item['presentation_date'].strftime('%Y-%m-%d') if item['presentation_date'] else None
-#     } for item in items], indent=4, ensure_ascii=False))
+    # Formatear salida como JSON
+    print(json.dumps([{
+        **item,
+        'presentation_date': item['presentation_date'].strftime('%Y-%m-%d') if item['presentation_date'] else None
+    } for item in items], indent=4, ensure_ascii=False))

@@ -300,60 +300,60 @@ def _parse_date(fecha_str):
         return datetime.now().date()
 
 
-async def debug_page_structure():
-    """Función auxiliar para analizar la estructura de la página"""
-    base_url = "https://www.mspas.gob.gt"
-    url = f"{base_url}/noticias-mspas"
+# async def debug_page_structure():
+#     """Función auxiliar para analizar la estructura de la página"""
+#     base_url = "https://www.mspas.gob.gt"
+#     url = f"{base_url}/noticias-mspas"
     
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
-        )
-        page = await context.new_page()
+#     async with async_playwright() as p:
+#         browser = await p.chromium.launch(headless=True)
+#         context = await browser.new_context(
+#             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+#         )
+#         page = await context.new_page()
         
-        try:
-            await page.goto(url, timeout=90000)
-            await page.wait_for_load_state("networkidle", timeout=60000)
+#         try:
+#             await page.goto(url, timeout=90000)
+#             await page.wait_for_load_state("networkidle", timeout=60000)
             
-            # Tomar una captura de pantalla
-            os.makedirs("debug", exist_ok=True)
-            await page.screenshot(path="debug/mspas_debug.png")
+#             # Tomar una captura de pantalla
+#             os.makedirs("debug", exist_ok=True)
+#             await page.screenshot(path="debug/mspas_debug.png")
             
-            # Guardar HTML para análisis
-            content = await page.content()
-            with open("debug/mspas_debug.html", "w", encoding="utf-8") as f:
-                f.write(content)
+#             # Guardar HTML para análisis
+#             content = await page.content()
+#             with open("debug/mspas_debug.html", "w", encoding="utf-8") as f:
+#                 f.write(content)
             
-            # Extraer y mostrar estructura básica
-            soup = BeautifulSoup(content, 'html.parser')
-            print("Estructura de la página:")
+#             # Extraer y mostrar estructura básica
+#             soup = BeautifulSoup(content, 'html.parser')
+#             print("Estructura de la página:")
             
-            # Imprimir todos los elementos article
-            print("\nElementos article:")
-            for i, article in enumerate(soup.find_all("article")):
-                class_attr = article.get("class", [])
-                class_str = " ".join(class_attr) if class_attr else "sin clase"
-                print(f"{i+1}. article.{class_str}")
+#             # Imprimir todos los elementos article
+#             print("\nElementos article:")
+#             for i, article in enumerate(soup.find_all("article")):
+#                 class_attr = article.get("class", [])
+#                 class_str = " ".join(class_attr) if class_attr else "sin clase"
+#                 print(f"{i+1}. article.{class_str}")
             
-            # Imprimir todos los div que podrían contener noticias
-            print("\nPosibles contenedores de noticias:")
-            news_containers = soup.select("div.itemList, div.blog, div.news, div.noticias")
-            for i, container in enumerate(news_containers):
-                class_attr = container.get("class", [])
-                class_str = " ".join(class_attr) if class_attr else "sin clase"
-                print(f"{i+1}. {container.name}.{class_str}")
+#             # Imprimir todos los div que podrían contener noticias
+#             print("\nPosibles contenedores de noticias:")
+#             news_containers = soup.select("div.itemList, div.blog, div.news, div.noticias")
+#             for i, container in enumerate(news_containers):
+#                 class_attr = container.get("class", [])
+#                 class_str = " ".join(class_attr) if class_attr else "sin clase"
+#                 print(f"{i+1}. {container.name}.{class_str}")
             
-            # Imprimir elementos h2 y h3 (posibles títulos)
-            print("\nPosibles titulares:")
-            headings = soup.select("h1, h2, h3")
-            for i, heading in enumerate(headings[:10]):  # Limitamos a 10 para no saturar
-                print(f"{i+1}. {heading.name}: {heading.text.strip()[:50]}")
+#             # Imprimir elementos h2 y h3 (posibles títulos)
+#             print("\nPosibles titulares:")
+#             headings = soup.select("h1, h2, h3")
+#             for i, heading in enumerate(headings[:10]):  # Limitamos a 10 para no saturar
+#                 print(f"{i+1}. {heading.name}: {heading.text.strip()[:50]}")
                 
-        except Exception as e:
-            print(f"Error en debug: {str(e)}")
-        finally:
-            await browser.close()
+#         except Exception as e:
+#             print(f"Error en debug: {str(e)}")
+#         finally:
+#             await browser.close()
 
 
 if __name__ == "__main__":

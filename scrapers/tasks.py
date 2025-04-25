@@ -313,6 +313,12 @@ AVAILABLE_SCRAPERS = {
         'name': 'SENASICA Noticias de México',
         'description': 'Obtiene noticias de SENASICA de México'
     },
+    'cofepris_docu_mx': {
+        'module': 'scrapers.scrapers.cofepris_docu_mx',
+        'function': 'scrape_cofepris_docu_mx',
+        'name': 'Cofepris Documentos de México',
+        'description': 'Obtiene documentos de Cofepris de México'
+    },
     
     # Añade más scrapers aquí usando el mismo formato
     # 'otro_scraper': {
