@@ -16,22 +16,23 @@ jobs:
       - name: Configurar Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.12'  # Puedes ajustar la versión según necesites
+          python-version: '3.12'  # Ajusta según necesites
 
       - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Crear directorio de management command
+      - name: Crear directorio de management command (si no existe)
         run: |
           mkdir -p scrapers/management/commands
           touch scrapers/management/__init__.py
           touch scrapers/management/commands/__init__.py
 
-      - name: Crear comando personalizado
+      - name: Crear comando personalizado (si no existe)
         run: |
-          echo 'from django.core.management.base import BaseCommand
+          if [ ! -f scrapers/management/commands/run_scrapers.py ]; then
+            echo 'from django.core.management.base import BaseCommand
           from scrapers.tasks import run_all_scrapers
 
           class Command(BaseCommand):
@@ -42,10 +43,18 @@ jobs:
                   self.stdout.write(
                       self.style.SUCCESS(f"Ejecución completada. Procesados {results[\"summary\"][\"total_processed\"]} items")
                   )' > scrapers/management/commands/run_scrapers.py
+          fi
+
+      # Crear archivo .env con variables temporales para las que no son necesarias para los scrapers
+      - name: Crear archivo .env con variables temporales
+        run: |
+          echo "EMAIL_HOST_USER=noreply@example.com" > .env
+          echo "EMAIL_HOST_PASSWORD=placeholder" >> .env
+          echo "SCRAPER_API_TOKEN=placeholder" >> .env
 
       - name: Ejecutar scrapers
         env:
-          # Variables básicas de Django según tu settings.py
+          # Variables básicas de Django
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DEBUG: 'False'
           
@@ -55,5 +64,10 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
+          
+          # Valores temporales para variables no relacionadas con scrapers
+          EMAIL_HOST_USER: 'noreply@example.com'
+          EMAIL_HOST_PASSWORD: 'placeholder'
+          SCRAPER_API_TOKEN: 'placeholder'
         run: |
           python manage.py run_scrapers
