@@ -16,19 +16,44 @@ jobs:
       - name: Configurar Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.12'  # Ajusta según la versión que necesites
+          python-version: '3.12'  # Puedes ajustar la versión según necesites
 
       - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Crear directorio de management command
+        run: |
+          mkdir -p scrapers/management/commands
+          touch scrapers/management/__init__.py
+          touch scrapers/management/commands/__init__.py
+
+      - name: Crear comando personalizado
+        run: |
+          echo 'from django.core.management.base import BaseCommand
+          from scrapers.tasks import run_all_scrapers
+
+          class Command(BaseCommand):
+              help = "Ejecuta todos los scrapers disponibles"
+
+              def handle(self, *args, **options):
+                  results = run_all_scrapers()
+                  self.stdout.write(
+                      self.style.SUCCESS(f"Ejecución completada. Procesados {results[\"summary\"][\"total_processed\"]} items")
+                  )' > scrapers/management/commands/run_scrapers.py
+
       - name: Ejecutar scrapers
         env:
-          # Variables de entorno para Supabase y Django
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-          # Añade cualquier otra variable de entorno que necesites
+          # Variables básicas de Django según tu settings.py
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DEBUG: 'False'
+          
+          # Variables de base de datos
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
         run: |
-          python manage.py run_scrapers  # Necesitarás crear este comando personalizado
+          python manage.py run_scrapers
