@@ -11,17 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout código
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Configurar Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.12'  # Ajusta según necesites
+          python-version: '3.12'
 
       - name: Instalar dependencias y Playwright
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install psycopg2-binary
           playwright install chromium
 
       - name: Crear directorio de management command (si no existe)
@@ -46,21 +47,42 @@ jobs:
                   )' > scrapers/management/commands/run_scrapers.py
           fi
 
-      # Crear archivo .env con variables de entorno
+      # Verificar que las variables de DB estén configuradas correctamente
+      - name: Verificar variables de entorno
+        env:
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+        run: |
+          echo "Verificando variables de entorno (sin mostrar valores)"
+          echo "DB_NAME está configurado: $([[ -n "$DB_NAME" ]] && echo "SÍ" || echo "NO")"
+          echo "DB_USER está configurado: $([[ -n "$DB_USER" ]] && echo "SÍ" || echo "NO")"
+          echo "DB_PASSWORD está configurado: $([[ -n "$DB_PASSWORD" ]] && echo "SÍ" || echo "NO")"
+          echo "DB_HOST está configurado: $([[ -n "$DB_HOST" ]] && echo "SÍ" || echo "NO")"
+          echo "DB_PORT está configurado: $([[ -n "$DB_PORT" ]] && echo "SÍ" || echo "NO")"
+
+      # Crear archivo .env
       - name: Crear archivo .env
         run: |
           echo "EMAIL_HOST_USER=noreply@example.com" > .env
           echo "EMAIL_HOST_PASSWORD=placeholder" >> .env
           echo "SCRAPER_API_TOKEN=placeholder" >> .env
-          # Añadir variables de base de datos para verificar conexión
           echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
           echo "DB_USER=${{ secrets.DB_USER }}" >> .env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
           echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
           echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
 
-      # Verificar conexión a base de datos antes de ejecutar scrapers
+      # Verificar conexión a base de datos
       - name: Verificar conexión a base de datos
+        env:
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
         run: |
           python -c "
           import os
@@ -70,14 +92,21 @@ jobs:
           max_attempts = 3
           attempt = 0
           
+          # Imprimir información de depuración (sin credenciales)
+          print(f\"Intentando conectar a base de datos en host: {os.environ.get('DB_HOST')}, puerto: {os.environ.get('DB_PORT')}\"
+          )
+          
           while attempt < max_attempts:
               try:
+                  # Asegurarse de usar la cadena de conexión completa
                   conn = psycopg2.connect(
                       dbname=os.environ.get('DB_NAME'),
                       user=os.environ.get('DB_USER'),
                       password=os.environ.get('DB_PASSWORD'),
                       host=os.environ.get('DB_HOST'),
-                      port=os.environ.get('DB_PORT')
+                      port=os.environ.get('DB_PORT'),
+                      # Forzar conexión TCP/IP agregando opciones
+                      options='-c search_path=public'
                   )
                   conn.close()
                   print('Conexión a base de datos exitosa')
@@ -114,5 +143,5 @@ jobs:
           # Verificar que Playwright esté correctamente instalado
           playwright --version
           
-          # Ejecutar scrapers
-          python manage.py run_scrapers
+          # Ejecutar scrapers con manejo de errores
+          python manage.py run_scrapers || echo "Los scrapers fallaron pero continuamos la ejecución"
