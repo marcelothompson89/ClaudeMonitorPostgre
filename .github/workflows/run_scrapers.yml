@@ -26,10 +26,9 @@ jobs:
       - name: Ejecutar scrapers
         env:
           # Variables de entorno para Supabase y Django
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
           # Añade cualquier otra variable de entorno que necesites
         run: |
           python manage.py run_scrapers  # Necesitarás crear este comando personalizado
