@@ -50,39 +50,32 @@ jobs:
       # Verificar que las variables de DB estén configuradas correctamente
       - name: Verificar variables de entorno
         env:
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
         run: |
           echo "Verificando variables de entorno (sin mostrar valores)"
-          echo "DB_NAME está configurado: $([[ -n "$DB_NAME" ]] && echo "SÍ" || echo "NO")"
-          echo "DB_USER está configurado: $([[ -n "$DB_USER" ]] && echo "SÍ" || echo "NO")"
+          echo "Usando configuración de Session Pooler de Supabase"
           echo "DB_PASSWORD está configurado: $([[ -n "$DB_PASSWORD" ]] && echo "SÍ" || echo "NO")"
-          echo "DB_HOST está configurado: $([[ -n "$DB_HOST" ]] && echo "SÍ" || echo "NO")"
-          echo "DB_PORT está configurado: $([[ -n "$DB_PORT" ]] && echo "SÍ" || echo "NO")"
 
-      # Crear archivo .env
+      # Crear archivo .env - Usando Session Pooler
       - name: Crear archivo .env
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           echo "EMAIL_HOST_USER=noreply@example.com" > .env
           echo "EMAIL_HOST_PASSWORD=placeholder" >> .env
           echo "SCRAPER_API_TOKEN=placeholder" >> .env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
-          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+          echo "DB_NAME=postgres" >> .env
+          echo "DB_USER=postgres.xgbeamjnwzlahjbehcuy" >> .env
+          echo "DB_PASSWORD=$DB_PASSWORD" >> .env
+          echo "DB_HOST=aws-0-sa-east-1.pooler.supabase.com" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "DEBUG=False" >> .env
 
       # Verificar conexión a base de datos
       - name: Verificar conexión a base de datos
         env:
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
         run: |
           python -c "
           import os
@@ -93,18 +86,17 @@ jobs:
           attempt = 0
           
           # Imprimir información de depuración (sin credenciales)
-          print(f\"Intentando conectar a base de datos en host: {os.environ.get('DB_HOST')}, puerto: {os.environ.get('DB_PORT')}\"
-          )
+          print(f\"Intentando conectar a base de datos en host: aws-0-sa-east-1.pooler.supabase.com, puerto: 5432\")
           
           while attempt < max_attempts:
               try:
                   # Asegurarse de usar la cadena de conexión completa
                   conn = psycopg2.connect(
-                      dbname=os.environ.get('DB_NAME'),
-                      user=os.environ.get('DB_USER'),
+                      dbname='postgres',
+                      user='postgres.xgbeamjnwzlahjbehcuy',
                       password=os.environ.get('DB_PASSWORD'),
-                      host=os.environ.get('DB_HOST'),
-                      port=os.environ.get('DB_PORT'),
+                      host='aws-0-sa-east-1.pooler.supabase.com',
+                      port=5432,
                       # Forzar conexión TCP/IP agregando opciones
                       options='-c search_path=public'
                   )
@@ -129,11 +121,11 @@ jobs:
           DEBUG: 'False'
           
           # Variables de base de datos
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
+          DB_NAME: 'postgres'
+          DB_USER: 'postgres.xgbeamjnwzlahjbehcuy'
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_HOST: 'aws-0-sa-east-1.pooler.supabase.com'
+          DB_PORT: '5432'
           
           # Valores para variables adicionales
           EMAIL_HOST_USER: 'noreply@example.com'
