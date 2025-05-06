@@ -132,15 +132,18 @@ async def scrape_boletin_oficial_ar():
                             break
                     
                     # E) NUEVO: Obtener detalle completo del aviso
-                    descripcion = "Sin descripción"
+                    descripcion = "Sin descripción" 
                     if source_url:
                         print(f"Obteniendo detalle del aviso {i+1}/{len(avisos)}: {source_url}")
                         descripcion = await obtener_detalle_aviso(page, source_url)
 
+                    # Aquí concatenas metadatos + descripción
+                    descripcion_completa = f"{metadatos}\n\n{descripcion}"
+                    
                     # Crear objeto en el formato esperado
                     item = {
                         'title': titulo,
-                        'description': descripcion,  # Ahora contiene el detalle completo
+                        'description': descripcion_completa,  # Ahora contiene el detalle completo
                         'metadata': metadatos,  # Guardamos los metadatos originales
                         'source_url': source_url,
                         'source_type': "Ejecutivo",

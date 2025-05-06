@@ -1,78 +1,132 @@
-from playwright.async_api import async_playwright
-from bs4 import BeautifulSoup
 import asyncio
+from datetime import datetime
 import json
+import time
+from urllib.parse import urlparse, parse_qs, unquote_plus
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 
-async def scrape_anvisa_legis_dom():
-    """
-    Scraper que renderiza el JavaScript completo en Playwright usando
-    el navegador Chrome instalado localmente para evitar detección.
-    Extrae los <article class="ato"> del DOM ya pintado.
-    """
-    base_url = "https://anvisalegis.datalegis.net"
-    open_url = (
-        f"{base_url}/action/ActionDatalegis.php"
-        f"?acao=abrirEmentario&cod_modulo=293&cod_menu=8499"
+async def scrape_anvisa_normas_br():
+    print("[ANVISA_Normas] Iniciando scraping...")
+    
+    # 1) Configurar Chrome en headless
+    chrome_options = Options()
+    chrome_options.add_argument('--headless=new')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--window-size=1920,1080')
+    chrome_options.add_argument('--disable-notifications')
+    chrome_options.add_argument('--disable-extensions')
+    chrome_options.add_argument('--disable-infobars')
+    chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+    chrome_options.add_argument(
+        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+        'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     )
-
-    async with async_playwright() as p:
-        # 1) Usa Chrome real en lugar de Chromium
-        browser = await p.chromium.launch(channel="chrome", headless=False)
-        page = await browser.new_page()
-        await page.set_viewport_size({"width": 1280, "height": 800})
-
-        # 2) Carga página y espera que la red se estabilice
-        await page.goto(open_url, wait_until="networkidle")
-        # 3) Simula interacción para disparar JS/lazy-loads
-        await page.mouse.click(100, 100)
-        # 4) Espera hasta que los actos estén presentes (máx. 2 min)
-        await page.wait_for_selector("article.ato", timeout=120000)
-
-        # 5) Captura el HTML renderizado
-        html = await page.content()
-        await browser.close()
-
-    # 6) Parséalo con BeautifulSoup
-    soup = BeautifulSoup(html, "html.parser")
-    items = []
-
-    # Fecha general
-    fecha_general = None
-    fecha_tag = soup.select_one("div.resenhaTitulo span")
-    if fecha_tag:
-        text = fecha_tag.get_text(strip=True)
+    
+    # 2) Iniciar driver
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()),
+        options=chrome_options
+    )
+    driver.set_page_load_timeout(60)
+    
+    url = (
+        "https://anvisalegis.datalegis.net/action/ActionDatalegis.php"
+        "?acao=consultarAtosInicial&cod_modulo=310&cod_menu=9434"
+    )
+    print(f"[ANVISA_Normas] Accediendo a URL: {url}")
+    
+    # 3) Cargar página con reintentos
+    for intento in range(3):
         try:
-            from datetime import datetime
-            fecha_general = datetime.strptime(text, "%d/%m/%Y").date().isoformat()
-        except ValueError:
-            fecha_general = text
-
-    # Extrae cada acto
-    for art in soup.select("article.ato"):
-        link = art.select_one(".ementa a.link")
-        if not link:
+            driver.get(url)
+            break
+        except Exception as e:
+            print(f"[ANVISA_Normas] Error al cargar (intento {intento+1}): {e}")
+            time.sleep(5)
+    else:
+        print("[ANVISA_Normas] No se pudo cargar la página.")
+        driver.quit()
+        return []
+    
+    wait = WebDriverWait(driver, 30)
+    
+    # 4) Hacer clic en “Pesquisar”
+    boton = wait.until(EC.element_to_be_clickable(
+        (By.CSS_SELECTOR, "button[name='pesquisar']")
+    ))
+    boton.click()
+    
+    # 5) Esperar resultados
+    atos = wait.until(EC.presence_of_all_elements_located(
+        (By.CSS_SELECTOR, "#divAtosLegislacao .ato")
+    ))
+    print(f"[ANVISA_Normas] Encontrados {len(atos)} atos.")
+    
+    items = []
+    for idx, ato in enumerate(atos, 1):
+        try:
+            a_tag = ato.find_element(By.TAG_NAME, "a")
+            href  = a_tag.get_attribute("href").strip()
+            titulo = a_tag.find_element(By.TAG_NAME, "strong").text.strip()
+            descripcion = a_tag.find_element(By.TAG_NAME, "p").text.strip()
+            
+            # 6) Extraer parámetros de la URL
+            qs = parse_qs(urlparse(href).query)
+            tipo    = qs.get("tipo", [""])[0]
+            numero  = qs.get("numeroAto", [""])[0]
+            seq     = qs.get("seqAto", [""])[0]
+            ano     = qs.get("valorAno", [""])[0]
+            orgao   = unquote_plus(qs.get("orgao", [""])[0])
+            
+            # 7) Parsear fecha del título (busca “de DD/MM/YYYY”)
+            from re import search
+            m = search(r"de (\d{2}/\d{2}/\d{4})", titulo)
+            if m:
+                fecha = datetime.strptime(m.group(1), "%d/%m/%Y")
+            else:
+                fecha = None
+            
+            # 8) Construir el item
+            item = {
+                "title": titulo,
+                "description": descripcion,
+                "source_url": href,
+                "source_type": "Ejecutivo",
+                "country": "Brasil",
+                "category": "Normas",
+                "presentation_date": fecha,
+                "institution": "ANVISA Brasil",
+                "metadata": json.dumps({
+                    "tipo": tipo,
+                    "numeroAto": numero,
+                    "seqAto": seq,
+                    "valorAno": ano,
+                    "orgao": orgao
+                }, ensure_ascii=False)
+            }
+            
+            items.append(item)
+            print(f"[ANVISA_Normas] {idx}. Extraído: {titulo}")
+        
+        except Exception as e:
+            print(f"[ANVISA_Normas] Error procesando ato #{idx}: {e}")
             continue
-        title = link.select_one("strong").get_text(strip=True)
-        status_tag = link.select_one("span.ico-situacao")
-        status = status_tag.get_text(strip=True) if status_tag else None
-        description = "\n".join(
-            p.get_text(strip=True)
-            for p in link.find_all("p")
-            if p.get_text(strip=True)
-        )
-        href = link.get("href")
-        source_url = base_url + href if href else None
-
-        items.append({
-            "title": title,
-            "status": status,
-            "description": description,
-            "source_url": source_url,
-            "presentation_date": fecha_general
-        })
-
+    
+    driver.quit()
+    print(f"[ANVISA_Normas] Scraping completado. Total items: {len(items)}")
     return items
 
+#Para ejecutar directamente y ver resultados:
 if __name__ == "__main__":
-    datos = asyncio.run(scrape_anvisa_legis_dom())
-    print(json.dumps(datos, indent=4, ensure_ascii=False))
+    resultados = asyncio.run(scrape_anvisa_normas_br())
+    for itm in resultados:
+        fecha = itm["presentation_date"].strftime("%Y-%m-%d") if itm["presentation_date"] else "N/A"
+        print(f"{fecha} - {itm['title']} → {itm['source_url']}")

@@ -162,6 +162,26 @@
                                                         <img src="https://flagcdn.com/24x18/cl.png" 
                                                              alt="{{ alerta.country }}" 
                                                              title="{{ alerta.country }}">
+                                                    {% elif country_code == "costa rica" %}
+                                                        <img src="https://flagcdn.com/24x18/cr.png" 
+                                                             alt="{{ alerta.country }}" 
+                                                             title="{{ alerta.country }}">
+                                                    {% elif country_code == "guatemala" %}
+                                                        <img src="https://flagcdn.com/24x18/gt.png" 
+                                                             alt="{{ alerta.country }}" 
+                                                             title="{{ alerta.country }}">
+                                                    {% elif country_code == "república dominicana" %}
+                                                        <img src="https://flagcdn.com/24x18/do.png" 
+                                                             alt="{{ alerta.country }}" 
+                                                             title="{{ alerta.country }}">
+                                                    {% elif country_code == "global" %}
+                                                        <img src="https://flagcdn.com/24x18/un.png" 
+                                                             alt="{{ alerta.country }}" 
+                                                             title="{{ alerta.country }}">
+                                                    {% elif country_code == "centroamérica" %}
+                                                        <img src="https://flagcdn.com/24x18/sica.png" 
+                                                             alt="{{ alerta.country }}" 
+                                                             title="{{ alerta.country }}">
                                                     {% else %}
                                                         <img src="https://flagcdn.com/24x18/{{ country_code|slice:":2" }}.png" 
                                                              alt="{{ alerta.country }}" 
@@ -183,19 +203,19 @@
                                 <div class="alerta-metadata">
                                     <div class="row g-2">
                                         <div class="col-auto">
-                                            <span class="metadata-item">
+                                            <span class="metadata-item date">
                                                 <i class="bi bi-calendar3"></i>
                                                 {{ alerta.presentation_date|date:"d/m/Y" }}
                                             </span>
                                         </div>
                                         <div class="col-auto">
-                                            <span class="metadata-item">
+                                            <span class="metadata-item category">
                                                 <i class="bi bi-tag"></i>
                                                 {{ alerta.category }}
                                             </span>
                                         </div>
                                         <div class="col-auto">
-                                            <span class="metadata-item">
+                                            <span class="metadata-item source-type">
                                                 <i class="bi bi-file-earmark-text"></i>
                                                 {{ alerta.source_type }}
                                             </span>
@@ -311,8 +331,8 @@
         $('.show-more-btn').click(function() {
             var isCollapsed = $(this).attr('aria-expanded') === 'false';
             $(this).html(isCollapsed ? 
-                '<i class="bi bi-arrows-collapse"></i> Ver menos' : 
-                '<i class="bi bi-arrows-expand"></i> Ver más');
+                '<i class="bi bi-arrows-expand"></i> Ver más' : 
+                '<i class="bi bi-arrows-collapse"></i> Ver menos');
         });
         
         // Manejar el toggle del filtro de palabras clave
