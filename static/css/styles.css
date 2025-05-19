@@ -10,6 +10,11 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
 }
 
+:root {
+    --bs-primary: #002D62;
+    --bs-primary-rgb: 0, 45, 98;
+}
+
 /* Estilos para el sidebar de filtros */
 .filter-section {
     margin-bottom: 1.5rem;
@@ -133,7 +138,7 @@ h1, h2, h3, h4, h5, h6 {
 .metadata-item {
     display: inline-flex;
     align-items: center;
-    background-color: rgba(13, 110, 253, 0.1); /* Color azul primario muy suave */
+    background-color: rgba(0, 45, 98, 0.1); /* Color azul primario muy suave */
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
     margin-right: 0.5rem;
@@ -182,14 +187,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .pagination .page-link {
-    color: #0d6efd;
+    color: #002D62;
     background-color: #fff;
     border: 1px solid #dee2e6;
 }
 
 .pagination .page-item.active .page-link {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
+    background-color: #002D62;
+    border-color: #002D62;
     color: white;
 }
 
@@ -243,7 +248,7 @@ h1, h2, h3, h4, h5, h6 {
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-    background-color: #0d6efd !important;
+    background-color: #002D62 !important;
     color: white !important;
     overflow: hidden !important;
     position: relative !important;
@@ -275,7 +280,7 @@ h1, h2, h3, h4, h5, h6 {
     width: 60px !important;
     height: 60px !important;
     border-radius: 50% !important;
-    background-color: #0d6efd !important;
+    background-color: #002D62 !important;
     color: white !important;
     display: flex !important;
     align-items: center !important;
@@ -357,7 +362,7 @@ i[class^="bi-"] {
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-    background-color: #0d6efd !important;
+    background-color: #002D62 !important;
     color: white !important;
     max-width: 80px !important;
     min-width: 80px !important;

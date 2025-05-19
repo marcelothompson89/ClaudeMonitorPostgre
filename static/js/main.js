@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
             container.style.display = 'flex';
             container.style.justifyContent = 'center';
             container.style.alignItems = 'center';
-            container.style.backgroundColor = '#0d6efd';
+            container.style.backgroundColor = '#002D62';
             container.style.color = 'white';
             container.style.position = 'relative';
             container.style.overflow = 'hidden';
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
             circle.style.width = '60px';
             circle.style.height = '60px';
             circle.style.borderRadius = '50%';
-            circle.style.backgroundColor = '#0d6efd';
+            circle.style.backgroundColor = '#002D62';
             circle.style.color = 'white';
             circle.style.display = 'flex';
             circle.style.alignItems = 'center';
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
             element.style.display = 'flex';
             element.style.justifyContent = 'center';
             element.style.alignItems = 'center';
-            element.style.backgroundColor = '#0d6efd';
+            element.style.backgroundColor = '#002D62';
             element.style.color = 'white';
             element.style.aspectRatio = '1 / 1';
         });
