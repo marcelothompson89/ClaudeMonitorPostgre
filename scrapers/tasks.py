@@ -13,10 +13,10 @@ logger = logging.getLogger(__name__)
 
 # Registro de scrapers disponibles
 AVAILABLE_SCRAPERS = {
-    'argentina_anmat': {
+    'argentina_noti_anmat': {
         'module': 'scrapers.scrapers.anmat_noti_ar',
         'function': 'scrape_anmat_noti_ar',
-        'name': 'ANMAT Argentina',
+        'name': 'ANMAT Noticias de Argentina',
         'description': 'Obtiene noticias de ANMAT Argentina'
     },
     'mexico_animalpolitico': {
