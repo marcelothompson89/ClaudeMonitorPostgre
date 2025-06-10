@@ -319,6 +319,12 @@ AVAILABLE_SCRAPERS = {
         'name': 'Cofepris Documentos de México',
         'description': 'Obtiene documentos de Cofepris de México'
     },
+    'colombia_invima_proynorm': {
+        'module': 'scrapers.scrapers.invima_proynorm_co',
+        'function': 'scrape_invima_proyectos_normativos_co',
+        'name': 'INVIMA Proyectos Normativos de Colombia',
+        'description': 'Obtiene proyectos normativos de INVIMA Colombia'
+    },
     
     # Añade más scrapers aquí usando el mismo formato
     # 'otro_scraper': {

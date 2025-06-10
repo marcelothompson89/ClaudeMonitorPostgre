@@ -72,50 +72,7 @@
         </div>
       </div>
       
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body text-center p-4">
-            <div class="feature-icon">
-              <div class="rounded-circle bg-primary text-white">
-                <i class="bi bi-clock-history"></i>
-              </div>
-            </div>
-            <h3 class="h5 fw-bold">Actualizaciones en Tiempo Real</h3>
-            <p class="text-muted mb-0">Recibe notificaciones inmediatas cuando aparezcan nuevas alertas relevantes.</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body text-center p-4">
-            <div class="feature-icon">
-              <div class="rounded-circle bg-primary text-white">
-                <i class="bi bi-bar-chart-fill"></i>
-              </div>
-            </div>
-            <h3 class="h5 fw-bold">Análisis de Datos</h3>
-            <p class="text-muted mb-0">Visualiza tendencias y estadísticas sobre las alertas para tomar mejores decisiones.</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body text-center p-4">
-            <div class="feature-icon">
-              <div class="rounded-circle bg-primary text-white">
-                <i class="bi bi-file-earmark-text-fill"></i>
-              </div>
-            </div>
-            <h3 class="h5 fw-bold">Informes Detallados</h3>
-            <p class="text-muted mb-0">Genera reportes personalizados y expórtalos en múltiples formatos.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+
 
 <!-- How It Works Section -->
 <section class="how-it-works py-5 bg-light" id="how-it-works">
@@ -181,287 +138,190 @@
   </div>
 </section>
 
-<!-- Product Details Section -->
-<section class="product-details py-5" id="product-details">
+
+
+<!-- Sección de Planes Simplificados con precio suavizado -->
+<section id="planes" class="section-padding bg-light-custom">
+      <div class="container text-center">
+      <h2 class="fw-bold mb-4">Soluciones para tu equipo</h2>
+      <p class="lead text-muted mb-4">Precios desde USD 99/mes. Consulta planes avanzados.</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+          <a href="#contacto" class="btn btn-outline-primary btn-lg rounded-pill px-4">
+          Para usuarios individuales
+          </a>
+          <a href="#contacto" class="btn btn-primary btn-lg rounded-pill px-4">
+          Para equipos y corporativos
+          </a>
+      </div>
+      </div>
+</section>
+
+
+<!-- Testimonios Section -->
+<section id="testimonios" class="section-padding bg-light-custom">
   <div class="container">
-    <div class="row align-items-center">
-      <div class="col-md-6 order-md-2">
-        <h2 class="fw-bold mb-4">Una Plataforma Completa de Monitoreo</h2>
-        <p class="lead mb-4">Nuestro sistema de alertas está diseñado para profesionales que necesitan estar al día con información crítica en su sector.</p>
-        
-        <ul class="feature-list">
-          <li>
-            <i class="bi bi-check-circle-fill text-success me-2"></i>
-            <strong>Dashboard intuitivo</strong> que muestra las alertas más recientes y relevantes
-          </li>
-          <li>
-            <i class="bi bi-check-circle-fill text-success me-2"></i>
-            <strong>Filtros potentes</strong> que permiten encontrar rápidamente la información necesaria
-          </li>
-          <li>
-            <i class="bi bi-check-circle-fill text-success me-2"></i>
-            <strong>Sistema de notificaciones</strong> configurables por email y aplicación
-          </li>
-          <li>
-            <i class="bi bi-check-circle-fill text-success me-2"></i>
-            <strong>API disponible</strong> para integración con tus sistemas existentes
-          </li>
-          <li>
-            <i class="bi bi-check-circle-fill text-success me-2"></i>
-            <strong>Acceso móvil</strong> para consultar alertas desde cualquier dispositivo
-          </li>
-        </ul>
-        
-        <a href="{% url 'alertas:alertas_list' %}" class="btn btn-primary mt-3">Explorar la Plataforma</a>
+      <div class="row justify-content-center text-center mb-5">
+      <div class="col-lg-8">
+          <h2 class="fw-bold mb-4">Lo que dicen nuestros clientes</h2>
+          <p class="lead text-muted">Personas que confían en nuestro sistema de alertas</p>
       </div>
-      <div class="col-md-6 order-md-1">
-        <img src="{% static 'img/product-details.png' %}" alt="Detalles del producto" class="img-fluid rounded shadow-lg">
       </div>
-    </div>
+      <div class="position-relative">
+      <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
+          <div class="carousel-inner">
+
+          <!-- Slide 1 -->
+          <div class="carousel-item active">
+              <div class="row g-4">
+              <div class="col-md-6">
+                  <div class="card h-100 shadow-sm p-4">
+                  <h5 class="text-primary mb-2">Directora de Regulación</h5>
+                  <p class="fst-italic mb-0">"Este sistema nos ha permitido estar al día con todas las alertas regulatorias. Ha sido fundamental para garantizar que cumplimos con los requisitos en todos los países donde operamos."</p>
+                  </div>
+              </div>
+              <div class="col-md-6">
+                  <div class="card h-100 shadow-sm p-4">
+                  <h5 class="text-primary mb-2">Gerente de Cumplimiento</h5>
+                  <p class="fst-italic mb-0">"La capacidad de filtrar alertas por país e institución ha sido extremadamente útil para nuestro equipo. Podemos asignar alertas específicas a diferentes departamentos según la relevancia."</p>
+                  </div>
+              </div>
+              </div>
+          </div>
+
+          <!-- Slide 2 -->
+          <div class="carousel-item">
+              <div class="row g-4">
+              <div class="col-md-6">
+                  <div class="card h-100 shadow-sm p-4">
+                  <h5 class="text-primary mb-2">Directora de Operaciones</h5>
+                  <p class="fst-italic mb-0">"Implementamos el sistema hace 6 meses y ha transformado nuestra forma de trabajar. Ahora podemos responder rápidamente a cambios regulatorios y mantenernos siempre un paso adelante."</p>
+                  </div>
+              </div>
+              <div class="col-md-6">
+                  <div class="card h-100 shadow-sm p-4">
+                  <h5 class="text-primary mb-2">Especialista en Asuntos Regulatorios</h5>
+                  <p class="fst-italic mb-0">"Oversia simplificó un proceso que antes nos llevaba horas. Ahora dedicamos más tiempo al análisis estratégico que a la búsqueda de información."</p>
+                  </div>
+              </div>
+              </div>
+          </div>
+
+          <!-- Slide 3 -->
+          <div class="carousel-item">
+              <div class="row g-4">
+              <div class="col-md-6">
+                  <div class="card h-100 shadow-sm p-4">
+                  <h5 class="text-primary mb-2">Responsable de Calidad y Compliance</h5>
+                  <p class="fst-italic mb-0">"La plataforma se volvió indispensable para nuestro equipo de calidad. Recibimos alertas clave sin tener que estar constantemente revisando fuentes manualmente."</p>
+                  </div>
+              </div>
+              <div class="col-md-6">
+              <div class="card h-100 shadow-sm p-4">
+                  <h5 class="text-primary mb-2">Analista Legal Regional</h5>
+                  <p class="fst-italic mb-0">"La plataforma nos da visibilidad anticipada sobre cambios normativos que afectan nuestras operaciones. Ahora podemos reaccionar con más agilidad y respaldar nuestras decisiones con información confiable."</p>
+              </div>
+              </div>
+              </div>
+          </div>
+
+          </div>
+
+          <!-- Controles personalizados -->
+          <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true" style="background-color: #002D62; border-radius: 50%; width: 40px; height: 40px;"></span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true" style="background-color: #002D62; border-radius: 50%; width: 40px; height: 40px;"></span>
+          </button>
+      </div>
+      </div>
   </div>
 </section>
 
-<!-- Pricing Section -->
-<section class="pricing py-5 bg-light" id="pricing">
-  <div class="container">
-    <div class="text-center mb-5">
-      <h2 class="fw-bold">Planes y Precios</h2>
-      <p class="text-muted">Soluciones flexibles para equipos de todos los tamaños</p>
-    </div>
-    
-    <div class="row g-4">
-      <!-- Plan Básico -->
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body p-4">
-            <h3 class="fw-bold text-center mb-3">Básico</h3>
-            <div class="price text-center mb-4">
-              <span class="currency">$</span>
-              <span class="amount">99</span>
-              <span class="period">/mes</span>
-            </div>
-            
-            <ul class="plan-features">
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> 1 usuario</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> 5 palabras clave</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> 3 fuentes a monitorear</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Notificaciones por email</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Alertas ilimitadas</li>
-              <li><i class="bi bi-x-circle-fill text-muted me-2"></i> API access</li>
-              <li><i class="bi bi-x-circle-fill text-muted me-2"></i> Reportes avanzados</li>
-            </ul>
-            
-            <a href="#" class="btn btn-outline-primary w-100 mt-4">Comenzar</a>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Plan Profesional -->
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow">
-          <div class="card-header text-center p-3 bg-primary text-white border-0">
-            <span class="badge bg-warning">Más popular</span>
-          </div>
-          <div class="card-body p-4">
-            <h3 class="fw-bold text-center mb-3">Profesional</h3>
-            <div class="price text-center mb-4">
-              <span class="currency">$</span>
-              <span class="amount">149</span>
-              <span class="period">/mes</span>
-            </div>
-            
-            <ul class="plan-features">
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> 5 usuarios</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> 15 palabras clave</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> 10 fuentes a monitorear</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Notificaciones por email</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Alertas ilimitadas</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> API access</li>
-              <li><i class="bi bi-x-circle-fill text-muted me-2"></i> Reportes avanzados</li>
-            </ul>
-            
-            <a href="#" class="btn btn-primary w-100 mt-4">Comenzar</a>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Plan Empresarial -->
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body p-4">
-            <h3 class="fw-bold text-center mb-3">Empresarial</h3>
-            <div class="price text-center mb-4">
-              <span class="currency">$</span>
-              <span class="amount">199</span>
-              <span class="period">/mes</span>
-            </div>
-            
-            <ul class="plan-features">
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Usuarios ilimitados</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Palabras clave ilimitadas</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Fuentes ilimitadas</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Notificaciones personalizadas</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Alertas ilimitadas</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> API access</li>
-              <li><i class="bi bi-check-circle-fill text-success me-2"></i> Reportes avanzados</li>
-            </ul>
-            
-            <a href="#" class="btn btn-outline-primary w-100 mt-4">Contactar</a>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="text-center mt-5">
-      <p class="text-muted">¿Necesitas un plan personalizado para tu organización?</p>
-      <a href="#contact" class="btn btn-outline-primary">Contactar con ventas</a>
-    </div>
-  </div>
-</section>
 
-<!-- Testimonials Section -->
-<section class="testimonials py-5" id="testimonials">
-  <div class="container">
-    <div class="text-center mb-5">
-      <h2 class="fw-bold">Lo que dicen nuestros clientes</h2>
-      <p class="text-muted">Empresas que confían en nuestro sistema de alertas</p>
+   <!-- FAQ Section -->
+   <section class="faq py-5 bg-light" id="faq">
+    <div class="container">
+      <div class="text-center mb-5">
+            <h2 class="fw-bold mb-4">Preguntas Frecuentes</h2>
+            <p class="lead text-muted">Respondemos algunas dudas comunes sobre Oversia</p>
+        </div>
     </div>
-    
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body p-4">
-            <div class="d-flex align-items-center mb-4">
-              <img src="{% static 'img/testimonial-1.jpg' %}" alt="Cliente" class="rounded-circle me-3" width="60">
-              <div>
-                <h4 class="h5 mb-0">María Rodríguez</h4>
-                <p class="text-muted mb-0">Directora de Regulación, Farmacéutica XYZ</p>
-              </div>
-            </div>
-            <blockquote class="mb-0">
-              <p>"Este sistema nos ha permitido estar al día con todas las alertas regulatorias. Ha sido fundamental para garantizar que cumplimos con los requisitos en todos los países donde operamos."</p>
-            </blockquote>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body p-4">
-            <div class="d-flex align-items-center mb-4">
-              <img src="{% static 'img/testimonial-2.jpg' %}" alt="Cliente" class="rounded-circle me-3" width="60">
-              <div>
-                <h4 class="h5 mb-0">Carlos Mendoza</h4>
-                <p class="text-muted mb-0">Gerente de Cumplimiento, Banco ABC</p>
-              </div>
-            </div>
-            <blockquote class="mb-0">
-              <p>"La capacidad de filtrar alertas por país e institución ha sido extremadamente útil para nuestro equipo. Podemos asignar alertas específicas a diferentes departamentos según la relevancia."</p>
-            </blockquote>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body p-4">
-            <div class="d-flex align-items-center mb-4">
-              <img src="{% static 'img/testimonial-3.jpg' %}" alt="Cliente" class="rounded-circle me-3" width="60">
-              <div>
-                <h4 class="h5 mb-0">Ana Gómez</h4>
-                <p class="text-muted mb-0">Directora de Operaciones, Consultora DEF</p>
-              </div>
-            </div>
-            <blockquote class="mb-0">
-              <p>"Implementamos el sistema hace 6 meses y ha transformado nuestra forma de trabajar. Ahora podemos responder rápidamente a cambios regulatorios y mantenernos siempre un paso adelante."</p>
-            </blockquote>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- FAQ Section -->
-<section class="faq py-5 bg-light" id="faq">
-  <div class="container">
-    <div class="text-center mb-5">
-      <h2 class="fw-bold">Preguntas Frecuentes</h2>
-      <p class="text-muted">Respuestas a las dudas más comunes</p>
-    </div>
-    
-    <div class="row">
-      <div class="col-lg-8 mx-auto">
-        <div class="accordion" id="accordionFAQ">
-          <div class="accordion-item border-0 mb-3 shadow-sm">
-            <h3 class="accordion-header">
-              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                ¿Cómo se actualiza la información de alertas?
-              </button>
-            </h3>
-            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#accordionFAQ">
-              <div class="accordion-body">
-                Nuestro sistema monitorea continuamente las fuentes seleccionadas y actualiza la información en tiempo real. Las alertas nuevas son procesadas y categorizadas automáticamente, y se envían notificaciones según las preferencias configuradas.
-              </div>
+        <div class="accordion" id="faqAccordion">
+        <!-- Pregunta 1 -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading1">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="true">
+                ¿Qué tipo de información monitorea Oversia?
+            </button>
+            </h2>
+            <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+            <div class="accordion-body">
+                Información regulatoria y sanitaria publicada por organismos oficiales de Latinoamérica, como ministerios de salud, agencias regulatorias (ANMAT, COFEPRIS, ANVISA, etc.), boletines oficiales, medios especializados y organismos internacionales como la OPS/OMS.
             </div>
-          </div>
-          
-          <div class="accordion-item border-0 mb-3 shadow-sm">
-            <h3 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                ¿Puedo personalizar las notificaciones?
-              </button>
-            </h3>
-            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
-              <div class="accordion-body">
-                Sí, puedes configurar notificaciones personalizadas para cada usuario. Es posible recibir alertas por email o dentro de la plataforma. También puedes establecer la frecuencia y el tipo de alertas que deseas recibir.
-              </div>
             </div>
-          </div>
-          
-          <div class="accordion-item border-0 mb-3 shadow-sm">
-            <h3 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                ¿Qué países e instituciones están incluidos?
-              </button>
-            </h3>
-            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
-              <div class="accordion-body">
-                Nuestro sistema cubre más de 50 países en América, Europa y Asia, y monitorea cientos de instituciones regulatorias, gubernamentales y sectoriales. La lista completa está disponible en nuestra documentación y se actualiza constantemente.
-              </div>
-            </div>
-          </div>
-          
-          <div class="accordion-item border-0 mb-3 shadow-sm">
-            <h3 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                ¿Cómo funciona la integración API?
-              </button>
-            </h3>
-            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
-              <div class="accordion-body">
-                Nuestra API RESTful permite integrar las alertas con tus sistemas existentes. Proporcionamos documentación detallada y ejemplos de código para facilitar la integración. La API está disponible en los planes Profesional y Empresarial.
-              </div>
-            </div>
-          </div>
-          
-          <div class="accordion-item border-0 shadow-sm">
-            <h3 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
-                ¿Puedo cambiar de plan en cualquier momento?
-              </button>
-            </h3>
-            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
-              <div class="accordion-body">
-                Sí, puedes actualizar o cambiar tu plan en cualquier momento. Los cambios se aplican inmediatamente y se ajustará tu facturación de forma proporcional al tiempo restante en tu ciclo de facturación actual.
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
+
+        <!-- Pregunta 2 -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading2">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+                ¿Está enfocada solamente en el sector salud?
+            </button>
+            </h2>
+            <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body">
+                Actualmente, Oversia está especializada en el monitoreo de información relacionada con la salud, productos sanitarios, alimentos, medicamentos, dispositivos médicos y decisiones de entidades regulatorias. Sin embargo, el sistema es escalable a otras industrias.
+            </div>
+            </div>
+        </div>
+
+        <!-- Pregunta 3 -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading3">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+                ¿Qué países cubre la plataforma?
+            </button>
+            </h2>
+            <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body">
+                Oversia cubre instituciones y fuentes de Argentina, Brasil, México, Chile, Perú, Colombia, Panamá, República Dominicana, Guatemala, Costa Rica, entre otros países de LATAM, y también fuentes globales como PAHO/OPS y WTO.
+            </div>
+            </div>
+        </div>
+
+        <!-- Pregunta 4 -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading4">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
+                ¿Cómo funcionan las alertas personalizadas?
+            </button>
+            </h2>
+            <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body">
+                Podés configurar palabras clave específicas (como “registro sanitario”, “lote retirado”, “resolución”, “COVID-19”, “nutrición clínica”, etc.) y recibirás alertas solo cuando haya coincidencias relevantes en las fuentes seleccionadas.
+            </div>
+            </div>
+        </div>
+
+        <!-- Pregunta 5 -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading5">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5">
+                ¿Puedo probar Oversia antes de contratar?
+            </button>
+            </h2>
+            <div id="collapse5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body">
+                Sí. Podés solicitar una demo gratuita para explorar la plataforma, ver ejemplos reales y validar si la cobertura se ajusta a las necesidades de tu organización.
+            </div>
+            </div>
+        </div>
+        </div>
     </div>
-  </div>
-</section>
+    </section>
+
 
 <!-- CTA Section -->
 <section class="cta py-5 bg-primary text-white" id="contact">
