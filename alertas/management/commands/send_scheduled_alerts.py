@@ -32,7 +32,7 @@ class Command(BaseCommand):
                 time_since_last = now - config.last_sent
                 
                 if config.frequency == 'daily':
-                    if config.last_sent + timedelta(days=1) <= now:
+                    if config.last_sent.date() < now.date():
                         should_send = True
                         reason = f"Último envío hace {time_since_last.days} días"
                     else:

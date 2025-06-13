@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+import hashlib
 
 class Keyword(models.Model):
     word = models.CharField(max_length=100)
@@ -40,20 +41,17 @@ class Alerta(models.Model):
     presentation_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    content_hash = models.CharField(max_length=64, unique=True, editable=False)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['source_url', 'title', 'presentation_date'],
-                name='unique_alerta_url_title_date',
-                condition=models.Q(source_url__isnull=False)
-            ),
-            models.UniqueConstraint(
-                fields=['title', 'presentation_date'],
-                name='unique_alerta_title_date',
-                condition=models.Q(source_url__isnull=True) | models.Q(source_url='')
-            )
-        ]
+       
+       pass
+
+    def save(self, *args, **kwargs):
+        # Generar hash antes de guardar
+        content_to_hash = f"{self.title}|{self.description}|{self.source_url}"
+        self.content_hash = hashlib.sha256(content_to_hash.encode('utf-8')).hexdigest()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title

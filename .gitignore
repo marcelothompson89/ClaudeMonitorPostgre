@@ -1,4 +1,35 @@
+
+# Variables de entorno (¡MUY IMPORTANTE!)
 .env
+
+# Base de datos
+*.db
+*.sqlite3
+alerts2.db
+
+# Python
 __pycache__/
+*.pyc
+*.pyo
+
+# Entorno virtual
 .venv/
+venv/
+env/
+
+# Django
+staticfiles/
+media/
+*.log
 .bat
+
+# Playwright
+playwright-browsers/
+
+# IDE
+.vscode/
+.idea/
+
+# Sistema
+.DS_Store
+Thumbs.db
