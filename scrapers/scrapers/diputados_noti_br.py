@@ -1,4 +1,3 @@
-
 import asyncio
 import httpx
 from bs4 import BeautifulSoup
@@ -47,14 +46,22 @@ async def scrape_diputados_noti_br():
                     enlace = titulo_tag["href"] if titulo_tag else None
                     url_completa = f"https://www.camara.leg.br{enlace}" if enlace and not enlace.startswith("http") else enlace
 
-                    # Extraer fecha
+                    # Extraer fecha y hora (están en elementos separados)
                     fecha_tag = noticia.select_one("span.g-chamada__data")
+                    hora_tag = noticia.select_one("span.g-chamada__hora")
+                    
                     fecha_texto = fecha_tag.text.strip() if fecha_tag else None
-                    try:
-                        fecha_actual = datetime.strptime(fecha_texto, "%d/%m/%Y %H:%M") if fecha_texto else None
-                    except ValueError:
-                        print(f"Fecha inválida: {fecha_texto}")
-                        fecha_actual = None
+                    hora_texto = hora_tag.text.strip() if hora_tag else None
+                    
+                    fecha_actual = None
+                    if fecha_texto and hora_texto:
+                        try:
+                            fecha_hora_completa = f"{fecha_texto} {hora_texto}"
+                            fecha_actual = datetime.strptime(fecha_hora_completa, "%d/%m/%Y %H:%M")
+                        except ValueError as e:
+                            print(f"Fecha inválida: {fecha_hora_completa} - Error: {e}")
+                    else:
+                        print(f"Fecha u hora no encontradas. Fecha: {fecha_texto}, Hora: {hora_texto}")
 
                     # Extraer descripción
                     descripcion_tag = noticia.select_one("img.g-chamada__imagem")
@@ -84,12 +91,12 @@ async def scrape_diputados_noti_br():
             return []
 
 
-# if __name__ == "__main__":
-#     # Ejecutar el scraper y mostrar los resultados
-#     items = asyncio.run(scrape_camara_noticias_br())
+if __name__ == "__main__":
+    # Ejecutar el scraper y mostrar los resultados
+    items = asyncio.run(scrape_diputados_noti_br())
 
-#     # Formatear salida como JSON
-#     print(json.dumps([{
-#         **item,
-#         'presentation_date': item['presentation_date'].strftime('%Y-%m-%d %H:%M') if item['presentation_date'] else None
-#     } for item in items], indent=4, ensure_ascii=False))
+    # Formatear salida como JSON
+    print(json.dumps([{
+        **item,
+        'presentation_date': item['presentation_date'].strftime('%Y-%m-%d %H:%M') if item['presentation_date'] else None
+    } for item in items], indent=4, ensure_ascii=False))

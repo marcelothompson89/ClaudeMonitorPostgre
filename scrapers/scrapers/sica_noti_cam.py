@@ -291,10 +291,10 @@ def _extract_date_from_text(text):
     
     return None
 
-# if __name__ == "__main__":
-#     # Ejecutar el scraper y mostrar los resultados en JSON
-#     noticias = asyncio.run(scrape_sica_noticias_cam())
-#     print(json.dumps([{
-#         **noticia,
-#         'presentation_date': noticia['presentation_date'].strftime('%Y-%m-%d') if noticia['presentation_date'] else None
-#     } for noticia in noticias], indent=4, ensure_ascii=False))
+if __name__ == "__main__":
+    # Ejecutar el scraper y mostrar los resultados en JSON
+    noticias = asyncio.run(scrape_sica_noticias_cam())
+    print(json.dumps([{
+        **noticia,
+        'presentation_date': noticia['presentation_date'].strftime('%Y-%m-%d') if noticia['presentation_date'] else None
+    } for noticia in noticias], indent=4, ensure_ascii=False))
