@@ -4,6 +4,8 @@ import logging
 import time
 from datetime import datetime
 from typing import Dict, Any, Callable, List
+
+from scrapers.scrapers import alianza_pacifico_reg
 from .models import ScraperLog
 
 
@@ -325,7 +327,88 @@ AVAILABLE_SCRAPERS = {
         'name': 'INVIMA Proyectos Normativos de Colombia',
         'description': 'Obtiene proyectos normativos de INVIMA Colombia'
     },
-    
+
+    'caf_regional_noticias':{
+        'module': 'scrapers.scrapers.caf_reg',
+        'function': 'scrape_caf_noticias',
+        'name': 'CAF Noticias',
+        'description': 'Obtiene noticias de CAF'
+    },
+
+    'alianza_pacifico_reg_noticias':{
+        'module': 'scrapers.scrapers.alianza_pacifico_reg',
+        'function': 'scrape_alianza_pacifico_noticias',
+        'name': 'Alianza del Pacífico Noticias',
+        'description': 'Obtiene noticias de Alianza del Pacífico'
+    },
+
+    'bid_reg_noticias':{
+        'module': 'scrapers.scrapers.bid_reg',
+        'function': 'scrape_bid_noticias',
+        'name': 'BID Noticias',
+        'description': 'Obtiene noticias de BID'
+    },
+
+    'who_glo_noticias':{
+        'module': 'scrapers.scrapers.who_reg',
+        'function': 'scrape_who_noticias',
+        'name': 'WHO Global Noticias',
+        'description': 'Obtiene noticias de WHO Global'
+    },
+
+    'ops_reg_eventos':{
+        'module': 'scrapers.scrapers.ops_reg_eventos',
+        'function': 'scrape_ops_eventos',
+        'name': 'OPS Regional Eventos',
+        'description': 'Obtiene eventos de OPS Regional'
+    },
+
+    'onu_noticias':{
+        'module': 'scrapers.scrapers.onu_noticias',
+        'function': 'scrape_onu_noticias',
+        'name': 'ONU Noticias',
+        'description': 'Obtiene noticias de ONU'
+    },
+
+    'gscf_noticias':{
+        'module': 'scrapers.scrapers.gscf_noticias',
+        'function': 'scrape_gscf_noticias',
+        'name': 'GSCF Noticias',
+        'description': 'Obtiene noticias de GSCF'       
+    },
+
+    'gscf_eventos':{
+        'module': 'scrapers.scrapers.gscf_eventos',
+        'function': 'scrape_gscf_eventos',
+        'name': 'GSCF Eventos',
+        'description': 'Obtiene eventos de GSCF'       
+    },
+
+    'codex_noticias':{
+        'module': 'scrapers.scrapers.codex_noticias',
+        'function': 'scrape_codex_noticias',
+        'name': 'Codex Noticias',
+        'description': 'Obtiene noticias de Codex'       
+    },
+
+    'cepal_noti_reg':{
+        'module': 'scrapers.scrapers.cepal_noti_reg',
+        'function': 'scrape_cepal_noti_reg',
+        'name': 'CEPAL Noticias',
+        'description': 'Obtiene noticias de CEPAL'          
+    },
+
+    'cepal_eventos_reg':{
+        'module': 'scrapers.scrapers.cepal_eventos_reg',
+        'function': 'scrape_cepal_eventos',
+        'name': 'CEPAL Eventos',
+        'description': 'Obtiene eventos de CEPAL'          
+    },
+
+
+
+
+
     # Añade más scrapers aquí usando el mismo formato
     # 'otro_scraper': {
     #     'module': 'scrapers.scrapers.otro_scraper',
