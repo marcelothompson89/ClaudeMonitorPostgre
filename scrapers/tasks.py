@@ -405,6 +405,50 @@ AVAILABLE_SCRAPERS = {
         'description': 'Obtiene eventos de CEPAL'          
     },
 
+    'codex_eventos':{
+        'module': 'scrapers.scrapers.codex_eventos',
+        'function': 'scrape_codex_eventos',
+        'name': 'Codex Eventos',
+        'description': 'Obtiene eventos de Codex'       
+    },
+
+    'fifarma_eventos':{
+        'module': 'scrapers.scrapers.fifarma_eventos',
+        'function': 'scrape_fifarma_eventos',
+        'name': 'FIFARMA Eventos',
+        'description': 'Obtiene eventos de FIFARMA'       
+    },
+
+    'fifarma_publicaciones':{
+        'module': 'scrapers.scrapers.fifarma_publicaciones',
+        'function': 'scrape_fifarma_publicaciones',
+        'name': 'FIFARMA Publicaciones',
+        'description': 'Obtiene publicaciones de FIFARMA'       
+    },
+
+    'fifarma_noticias':{
+        'module': 'scrapers.scrapers.fifarma_noticias',
+        'function': 'scrape_fifarma_noticias',
+        'name': 'FIFARMA Noticias',
+        'description': 'Obtiene noticias de FIFARMA'       
+    },
+
+    'andi_noticias':{
+        'module': 'scrapers.scrapers.andi_noticias',
+        'function': 'scrape_andi_noticias',
+        'name': 'ANDI Noticias',
+        'description': 'Obtiene noticias de ANDI'       
+    },
+
+    'comisca_noticias':{
+        'module': 'scrapers.scrapers.comisca_noticias',
+        'function': 'scrape_comisca_noticias',
+        'name': 'COMISCA Noticias',
+        'description': 'Obtiene noticias de COMISCA'       
+    },
+
+
+
 
 
 
