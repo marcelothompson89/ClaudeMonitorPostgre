@@ -33,3 +33,6 @@ playwright-browsers/
 # Sistema
 .DS_Store
 Thumbs.db
+
+#Claude
+.claude/

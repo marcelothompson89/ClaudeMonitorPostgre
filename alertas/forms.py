@@ -2,7 +2,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Alerta, Keyword, EmailAlertConfig
+from .models import Alerta, Keyword, EmailAlertConfig, Evento
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
@@ -146,6 +146,20 @@ class EmailAlertConfigForm(forms.ModelForm):
         
         categories = [('', '--------')] + [(c, c) for c in Alerta.objects.values_list('category', flat=True).distinct().order_by('category')]
         self.fields['category'].choices = categories
+
+
+class EventoForm(forms.ModelForm):
+    class Meta:
+        model = Evento
+        fields = ['titulo', 'descripcion', 'fecha_inicio', 'fecha_fin', 'tipo', 'ubicacion']
+        widgets = {
+            'titulo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Título del evento'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Descripción (opcional)'}),
+            'fecha_inicio': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'fecha_fin': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'ubicacion': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ubicación (opcional)'}),
+        }
 
 
 class CustomUserCreationForm(UserCreationForm):

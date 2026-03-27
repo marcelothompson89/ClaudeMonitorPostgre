@@ -91,3 +91,30 @@ class EmailAlertConfig(models.Model):
     
     def __str__(self):
         return f"{self.name} - {self.user.username}"
+
+
+class Evento(models.Model):
+    TIPO_CHOICES = [
+        ('evento', 'Evento'),
+        ('comite', 'Comité'),
+        ('politico', 'Político'),
+        ('feriado', 'Feriado'),
+        ('conferencia', 'Conferencia'),
+        ('otro', 'Otro'),
+    ]
+
+    titulo = models.CharField(max_length=500, verbose_name="Título")
+    descripcion = models.TextField(blank=True, verbose_name="Descripción")
+    fecha_inicio = models.DateField(verbose_name="Fecha de inicio")
+    fecha_fin = models.DateField(null=True, blank=True, verbose_name="Fecha de fin")
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='evento', verbose_name="Tipo")
+    ubicacion = models.CharField(max_length=300, blank=True, verbose_name="Ubicación")
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['fecha_inicio']
+
+    def __str__(self):
+        return f"{self.titulo} ({self.fecha_inicio})"

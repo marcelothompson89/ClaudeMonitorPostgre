@@ -26,6 +26,12 @@ python manage.py run_scrapers --list
 # Send scheduled email alerts
 python manage.py send_scheduled_alerts
 
+# Import events from Excel calendar
+python manage.py import_eventos
+
+# Import events (clear existing first)
+python manage.py import_eventos --limpiar
+
 # Database migrations
 python manage.py makemigrations
 python manage.py migrate
@@ -38,7 +44,7 @@ python manage.py migrate
 
 ### Django Apps
 
-- **alertas** - Core app: models (`Alerta`, `Keyword`, `Source`, `EmailAlertConfig`), views for browsing/filtering alerts, keyword management, email alert configuration, and email delivery via `services.py`.
+- **alertas** - Core app: models (`Alerta`, `Keyword`, `Source`, `EmailAlertConfig`, `Evento`), views for browsing/filtering alerts, keyword management, email alert configuration, email delivery via `services.py`, and event calendar.
 - **scrapers** - Scraping engine: individual scraper modules in `scrapers/scrapers/`, orchestration in `tasks.py`, execution logs via `ScraperLog` model, staff-only dashboard for monitoring.
 - **alertas_project** - Django project config, root URL routing, landing page, auth views.
 
@@ -71,6 +77,41 @@ Each scraper is an independent async function in `scrapers/scrapers/<name>.py` f
 - **Email alerts**: daily at 9 AM UTC (`.github/workflows/send_scheduled_alerts.yml`)
 - DB credentials injected from GitHub Secrets; uses Supabase session pooler (`aws-0-sa-east-1.pooler.supabase.com`)
 
+### Event Calendar
+
+Shared calendar at `/alertas/calendario/` displaying institutional events. Uses FullCalendar.js (CDN) for month/week views with side panel for automatic event detection. All authenticated users can create, view, edit, and delete events.
+
+#### Core Calendar Features
+- **Model**: `Evento` with fields: `titulo`, `descripcion`, `fecha_inicio`, `fecha_fin`, `tipo` (evento/comité/político/feriado/conferencia/otro), `ubicacion`, `created_by`
+- **API endpoint**: `/alertas/calendario/api/eventos/` returns JSON for FullCalendar (filtered by `start`/`end` params)
+- **CRUD Operations**:
+  - Create: AJAX POST to `/alertas/calendario/evento/crear/`
+  - Edit: Click event → "Editar" button opens modal with pre-filled form → AJAX POST to `/alertas/calendario/evento/<pk>/editar/`
+  - Delete: Click event → "Eliminar" button → AJAX POST to `/alertas/calendario/evento/<pk>/eliminar/`
+- **Import**: `python manage.py import_eventos` loads events from `CALENDARIO EVENTOS & COMITÉS 2026 (1).xlsx` using `openpyxl`. Uses `get_or_create` on `titulo` + `fecha_inicio` to avoid duplicates.
+- **Colors by type**: evento=#002D62, comité=#198754, político=#dc3545, feriado=#ffc107, conferencia=#0dcaf0, otro=#6c757d
+
+#### Automatic Event Detection (from scraped alerts)
+
+**Purpose**: Automatically identifies potential events in scraped alerts and displays them in a sidebar for easy addition to the calendar.
+
+**Detection Logic** (`alertas/utils.py`):
+- `contains_event_keywords(text)`: Filters alerts containing 25+ Spanish event keywords (congreso, conferencia, seminario, webinar, taller, workshop, foro, reunión, sesión, simposio, jornada, encuentro, convocatoria, inscripción, registro, charla, curso, capacitación, cumbre, summit, mesa redonda, panel, debate, expo, feria, exhibición, lanzamiento, presentación, inauguración, ceremonia, asamblea, cita, audiencia, consulta pública)
+- `extract_dates_from_text(text)`: Uses `dateparser` library to extract event dates from Spanish text. Handles ranges like "del 15 al 20 de marzo de 2026" and single dates. Returns `{'start_date': date, 'end_date': date}`.
+- `suggest_event_type(title, description)`: Suggests event type (conferencia, comité, político, feriado, evento) based on keyword patterns
+
+**API & Views**:
+- `GET /alertas/calendario/api/eventos-potenciales/` → `api_eventos_potenciales()`: Returns up to 20 potential events from the last 30 days. Queries last 100 alerts, filters by keywords, extracts dates, and returns JSON with: `id`, `title`, `description`, `source`, `country`, `category`, `source_url`, `detected_start_date`, `detected_end_date`, `suggested_type`
+- `POST /alertas/calendario/alerta/<alerta_id>/convertir/` → `convertir_alerta_a_evento()`: Converts an alert to a calendar event (endpoint exists but currently unused; conversion happens via modal form)
+
+**UI Implementation**:
+- **Two-column layout**: Calendar (8 cols) + Sidebar panel (4 cols) showing detected events
+- **Event cards**: Display title, description, source, country, detected dates, link to original source
+- **One-click add**: "Agregar al Calendario" button opens creation modal with pre-filled data (title, description, dates, suggested type)
+- **Data attributes**: Uses `dataset` attributes and event delegation to safely handle special characters (quotes, accents, symbols) in event titles
+
+**Dependencies**: Requires `dateparser==1.2.0` for Spanish date extraction
+
 ### API Authentication
 
 `POST /api/run-scrapers/` requires `X-API-Key` header validated with `hmac.compare_digest` against `SCRAPER_API_TOKEN` env var.
@@ -79,7 +120,7 @@ Each scraper is an independent async function in `scrapers/scrapers/<name>.py` f
 
 PostgreSQL on Supabase. Config via `python-decouple` reading `.env` vars: `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`. A legacy SQLite DB (`alerts2.db`) is configured as `old_db` but not actively used.
 
-**Key models**: `Alerta` (core alert data), `Keyword` (user search terms, unique per user), `EmailAlertConfig` (scheduled email filters), `Source` (data source registry), `ScraperLog` (execution audit trail).
+**Key models**: `Alerta` (core alert data), `Keyword` (user search terms, unique per user), `EmailAlertConfig` (scheduled email filters), `Source` (data source registry), `ScraperLog` (execution audit trail), `Evento` (calendar events with type, dates, location).
 
 ## Deployment
 

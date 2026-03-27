@@ -1,0 +1,583 @@
+{% extends 'alertas/base.html' %}
+{% load static %}
+
+{% block title %}Calendario Eventos{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.css" rel="stylesheet">
+<style>
+    #calendar {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+    .fc-event {
+        cursor: pointer;
+        font-size: 0.85em;
+    }
+    .fc .fc-toolbar-title {
+        text-transform: capitalize;
+    }
+    .evento-tipo-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        color: #fff;
+        font-size: 0.85em;
+    }
+    .potential-event-card {
+        transition: transform 0.2s;
+        border-left: 3px solid #0dcaf0;
+    }
+    .potential-event-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    #eventosPotencialesList {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    .badge-country {
+        font-size: 0.75em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Barra de navegación específica para alertas -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light rounded shadow-sm">
+                <div class="container-fluid">
+                    <span class="navbar-brand">Sistema de Alertas</span>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#alertasNavbar" aria-controls="alertasNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="alertasNavbar">
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'alertas:alertas_list' %}">
+                                    <i class="bi bi-bell-fill"></i> Alertas
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'alertas:manage_keywords' %}">
+                                    <i class="bi bi-tags-fill"></i> Mis Palabras Clave
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'alertas:email_alert_configs' %}">
+                                    <i class="bi bi-envelope"></i> Alertas por correo
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link active" href="{% url 'alertas:calendario_eventos' %}">
+                                    <i class="bi bi-calendar-event"></i> Calendario Eventos
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="d-flex">
+                            <span class="navbar-text">
+                                Usuario: {{ request.user.username }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Layout con Calendario y Panel Lateral -->
+    <div class="row">
+        <!-- Calendario Principal -->
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4><i class="bi bi-calendar-event"></i> Calendario de Eventos</h4>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearEvento">
+                    <i class="bi bi-plus-circle"></i> Agregar Evento
+                </button>
+            </div>
+            <div class="bg-white p-3 rounded shadow-sm">
+                <div id="calendar"></div>
+            </div>
+        </div>
+
+        <!-- Panel Lateral - Eventos Potenciales -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightbulb-fill"></i> Posibles Eventos Detectados
+                    </h5>
+                    <small>Detectados automáticamente del último mes</small>
+                </div>
+                <div class="card-body p-0">
+                    <div id="eventosPotencialesList">
+                        <div class="text-center p-4">
+                            <div class="spinner-border text-info" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Buscando eventos potenciales...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear Evento -->
+<div class="modal fade" id="modalCrearEvento" tabindex="-1" aria-labelledby="modalCrearEventoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCrearEventoLabel">Agregar Evento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="formCrearEvento">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="id_titulo" class="form-label">Título *</label>
+                        {{ form.titulo }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_descripcion" class="form-label">Descripción</label>
+                        {{ form.descripcion }}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_fecha_inicio" class="form-label">Fecha de inicio *</label>
+                            {{ form.fecha_inicio }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_fecha_fin" class="form-label">Fecha de fin</label>
+                            {{ form.fecha_fin }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_tipo" class="form-label">Tipo</label>
+                            {{ form.tipo }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_ubicacion" class="form-label">Ubicación</label>
+                            {{ form.ubicacion }}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalle Evento -->
+<div class="modal fade" id="modalDetalleEvento" tabindex="-1" aria-labelledby="modalDetalleEventoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDetalleEventoLabel">Detalle del Evento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <h5 id="detalleTitulo"></h5>
+                <p id="detalleDescripcion" class="text-muted"></p>
+                <ul class="list-unstyled">
+                    <li><strong>Tipo:</strong> <span id="detalleTipo" class="evento-tipo-badge"></span></li>
+                    <li class="mt-2"><strong>Fecha:</strong> <span id="detalleFecha"></span></li>
+                    <li class="mt-2" id="detalleUbicacionRow"><strong>Ubicación:</strong> <span id="detalleUbicacion"></span></li>
+                    <li class="mt-2" id="detalleCreadorRow"><strong>Creado por:</strong> <span id="detalleCreador"></span></li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" id="btnEditarEvento">
+                    <i class="bi bi-pencil"></i> Editar
+                </button>
+                <button type="button" class="btn btn-danger" id="btnEliminarEvento">
+                    <i class="bi bi-trash"></i> Eliminar
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Evento -->
+<div class="modal fade" id="modalEditarEvento" tabindex="-1" aria-labelledby="modalEditarEventoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditarEventoLabel">Editar Evento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="formEditarEvento">
+                {% csrf_token %}
+                <input type="hidden" id="edit_evento_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_titulo" class="form-label">Título *</label>
+                        <input type="text" class="form-control" id="edit_titulo" name="titulo" maxlength="200" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="edit_descripcion" name="descripcion" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_fecha_inicio" class="form-label">Fecha de inicio *</label>
+                            <input type="date" class="form-control" id="edit_fecha_inicio" name="fecha_inicio" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_fecha_fin" class="form-label">Fecha de fin</label>
+                            <input type="date" class="form-control" id="edit_fecha_fin" name="fecha_fin">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_tipo" class="form-label">Tipo</label>
+                            <select class="form-select" id="edit_tipo" name="tipo">
+                                <option value="evento">Evento</option>
+                                <option value="comite">Comité</option>
+                                <option value="politico">Político</option>
+                                <option value="feriado">Feriado</option>
+                                <option value="conferencia">Conferencia</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_ubicacion" class="form-label">Ubicación</label>
+                            <input type="text" class="form-control" id="edit_ubicacion" name="ubicacion" maxlength="200">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.9/locales/es.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    let currentEventId = null;
+
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        locale: 'es',
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,dayGridWeek'
+        },
+        events: {
+            url: '{% url "alertas:api_eventos" %}',
+            failure: function() {
+                alert('Error al cargar los eventos.');
+            }
+        },
+        dateClick: function(info) {
+            // Al hacer click en un día, abrir modal de crear con fecha pre-llenada
+            document.getElementById('id_fecha_inicio').value = info.dateStr;
+            document.getElementById('id_fecha_fin').value = '';
+            document.getElementById('id_titulo').value = '';
+            document.getElementById('id_descripcion').value = '';
+            document.getElementById('id_tipo').value = 'evento';
+            document.getElementById('id_ubicacion').value = '';
+            const modal = new bootstrap.Modal(document.getElementById('modalCrearEvento'));
+            modal.show();
+        },
+        eventClick: function(info) {
+            const props = info.event.extendedProps;
+            currentEventId = info.event.id;
+
+            document.getElementById('detalleTitulo').textContent = info.event.title;
+            document.getElementById('detalleDescripcion').textContent = props.descripcion || 'Sin descripción';
+
+            const tipoBadge = document.getElementById('detalleTipo');
+            tipoBadge.textContent = props.tipo;
+            tipoBadge.style.backgroundColor = info.event.backgroundColor;
+
+            // Formatear fechas
+            let fechaTexto = props.fecha_inicio;
+            if (props.fecha_fin) {
+                fechaTexto += ' al ' + props.fecha_fin;
+            }
+            document.getElementById('detalleFecha').textContent = fechaTexto;
+
+            // Ubicación
+            const ubicacionRow = document.getElementById('detalleUbicacionRow');
+            if (props.ubicacion) {
+                document.getElementById('detalleUbicacion').textContent = props.ubicacion;
+                ubicacionRow.style.display = '';
+            } else {
+                ubicacionRow.style.display = 'none';
+            }
+
+            // Creador
+            const creadorRow = document.getElementById('detalleCreadorRow');
+            if (props.created_by) {
+                document.getElementById('detalleCreador').textContent = props.created_by;
+                creadorRow.style.display = '';
+            } else {
+                creadorRow.style.display = 'none';
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('modalDetalleEvento'));
+            modal.show();
+        },
+        editable: false,
+        dayMaxEvents: 3,
+        height: 'auto',
+    });
+
+    calendar.render();
+
+    // Crear evento via AJAX
+    document.getElementById('formCrearEvento').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        fetch('{% url "alertas:crear_evento" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                calendar.refetchEvents();
+                bootstrap.Modal.getInstance(document.getElementById('modalCrearEvento')).hide();
+                this.reset();
+            } else {
+                let errorMsg = 'Error al crear el evento:\n';
+                for (const [field, errors] of Object.entries(data.errors)) {
+                    errorMsg += `${field}: ${errors.join(', ')}\n`;
+                }
+                alert(errorMsg);
+            }
+        })
+        .catch(() => alert('Error de conexión al crear el evento.'));
+    });
+
+    // Editar evento - abrir modal con datos precargados
+    document.getElementById('btnEditarEvento').addEventListener('click', function() {
+        if (!currentEventId) return;
+
+        // Obtener el evento actual desde el calendario
+        const event = calendar.getEventById(currentEventId);
+        if (!event) return;
+
+        const props = event.extendedProps;
+
+        // Rellenar el formulario de edición con los datos actuales
+        document.getElementById('edit_evento_id').value = currentEventId;
+        document.getElementById('edit_titulo').value = event.title;
+        document.getElementById('edit_descripcion').value = props.descripcion || '';
+        document.getElementById('edit_fecha_inicio').value = props.fecha_inicio;
+        document.getElementById('edit_fecha_fin').value = props.fecha_fin || '';
+        document.getElementById('edit_tipo').value = props.tipo_value;
+        document.getElementById('edit_ubicacion').value = props.ubicacion || '';
+
+        // Cerrar modal de detalles y abrir modal de edición
+        bootstrap.Modal.getInstance(document.getElementById('modalDetalleEvento')).hide();
+        const modalEditar = new bootstrap.Modal(document.getElementById('modalEditarEvento'));
+        modalEditar.show();
+    });
+
+    // Guardar cambios del evento editado
+    document.getElementById('formEditarEvento').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const eventoId = document.getElementById('edit_evento_id').value;
+        if (!eventoId) return;
+
+        const formData = new FormData(this);
+
+        fetch(`/alertas/calendario/evento/${eventoId}/editar/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                calendar.refetchEvents();
+                bootstrap.Modal.getInstance(document.getElementById('modalEditarEvento')).hide();
+                this.reset();
+                currentEventId = null;
+            } else {
+                let errorMsg = 'Error al editar el evento:\n';
+                for (const [field, errors] of Object.entries(data.errors)) {
+                    errorMsg += `${field}: ${errors.join(', ')}\n`;
+                }
+                alert(errorMsg);
+            }
+        })
+        .catch(() => alert('Error de conexión al editar el evento.'));
+    });
+
+    // Eliminar evento
+    document.getElementById('btnEliminarEvento').addEventListener('click', function() {
+        if (!currentEventId) return;
+        if (!confirm('¿Está seguro de que desea eliminar este evento?')) return;
+
+        fetch(`/alertas/calendario/evento/${currentEventId}/eliminar/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                calendar.refetchEvents();
+                bootstrap.Modal.getInstance(document.getElementById('modalDetalleEvento')).hide();
+                currentEventId = null;
+            } else {
+                alert('Error al eliminar el evento.');
+            }
+        })
+        .catch(() => alert('Error de conexión al eliminar el evento.'));
+    });
+
+    // ==================== Eventos Potenciales ====================
+
+    // Cargar eventos potenciales desde alertas scrapeadas
+    function cargarEventosPotenciales() {
+        fetch('{% url "alertas:api_eventos_potenciales" %}')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('eventosPotencialesList');
+
+                if (data.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center p-4 text-muted">
+                            <i class="bi bi-info-circle" style="font-size: 2rem;"></i>
+                            <p class="mt-2">No se detectaron eventos potenciales en el último mes.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                data.forEach(alerta => {
+                    const card = document.createElement('div');
+                    card.className = 'potential-event-card p-3 border-bottom';
+
+                    // Crear elementos de forma segura
+                    const cardContent = document.createElement('div');
+
+                    // Header con título y país
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'd-flex justify-content-between align-items-start mb-2';
+
+                    const titleH6 = document.createElement('h6');
+                    titleH6.className = 'mb-1 flex-grow-1';
+                    titleH6.style.fontSize = '0.9rem';
+                    titleH6.textContent = alerta.title;
+
+                    const countryBadge = document.createElement('span');
+                    countryBadge.className = 'badge bg-secondary badge-country ms-2';
+                    countryBadge.textContent = alerta.country;
+
+                    headerDiv.appendChild(titleH6);
+                    headerDiv.appendChild(countryBadge);
+
+                    // Descripción
+                    const descP = document.createElement('p');
+                    descP.className = 'small text-muted mb-2';
+                    descP.style.fontSize = '0.8rem';
+                    descP.textContent = alerta.description || 'Sin descripción';
+
+                    // Detalles (fuente, fecha, link)
+                    const detailsDiv = document.createElement('div');
+                    detailsDiv.className = 'small mb-2';
+                    detailsDiv.innerHTML = `
+                        <strong>Fuente:</strong> ${alerta.source}<br>
+                        ${alerta.detected_start_date ? `<strong>Fecha detectada:</strong> ${formatDate(alerta.detected_start_date)}${alerta.detected_end_date ? ' al ' + formatDate(alerta.detected_end_date) : ''}<br>` : ''}
+                        ${alerta.source_url ? `<a href="${alerta.source_url}" target="_blank" class="text-decoration-none"><i class="bi bi-link-45deg"></i> Ver fuente</a>` : ''}
+                    `;
+
+                    // Botón con data attributes
+                    const addButton = document.createElement('button');
+                    addButton.className = 'btn btn-sm btn-success w-100 mt-2 btn-agregar-evento';
+                    addButton.innerHTML = '<i class="bi bi-calendar-plus"></i> Agregar al Calendario';
+                    addButton.dataset.alertaId = alerta.id;
+                    addButton.dataset.titulo = alerta.title;
+                    addButton.dataset.descripcion = alerta.description || '';
+                    addButton.dataset.fechaInicio = alerta.detected_start_date || '';
+                    addButton.dataset.fechaFin = alerta.detected_end_date || '';
+                    addButton.dataset.tipo = alerta.suggested_type;
+
+                    // Agregar todo al card
+                    cardContent.appendChild(headerDiv);
+                    cardContent.appendChild(descP);
+                    cardContent.appendChild(detailsDiv);
+                    cardContent.appendChild(addButton);
+
+                    card.appendChild(cardContent);
+                    container.appendChild(card);
+                });
+            })
+            .catch(error => {
+                console.error('Error al cargar eventos potenciales:', error);
+                document.getElementById('eventosPotencialesList').innerHTML = `
+                    <div class="text-center p-4 text-danger">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Error al cargar eventos potenciales.</p>
+                    </div>
+                `;
+            });
+    }
+
+    // Función para formatear fechas
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    // Event listener delegado para botones de agregar evento
+    document.getElementById('eventosPotencialesList').addEventListener('click', function(e) {
+        // Buscar el botón más cercano (en caso de que se haga clic en el icono)
+        const button = e.target.closest('.btn-agregar-evento');
+        if (!button) return;
+
+        // Obtener datos desde los atributos data-*
+        const titulo = button.dataset.titulo;
+        const descripcion = button.dataset.descripcion;
+        const fechaInicio = button.dataset.fechaInicio;
+        const fechaFin = button.dataset.fechaFin;
+        const tipo = button.dataset.tipo;
+
+        // Pre-llenar el formulario de creación con los datos de la alerta
+        document.getElementById('id_titulo').value = titulo;
+        document.getElementById('id_descripcion').value = descripcion;
+        document.getElementById('id_fecha_inicio').value = fechaInicio || '';
+        document.getElementById('id_fecha_fin').value = fechaFin || '';
+        document.getElementById('id_tipo').value = tipo || 'evento';
+        document.getElementById('id_ubicacion').value = '';
+
+        // Abrir el modal de creación
+        const modal = new bootstrap.Modal(document.getElementById('modalCrearEvento'));
+        modal.show();
+    });
+
+    // Cargar eventos potenciales al iniciar la página
+    cargarEventosPotenciales();
+});
+</script>
+{% endblock %}

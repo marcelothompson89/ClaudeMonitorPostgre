@@ -27,9 +27,15 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'email_alert_configs' %}active{% endif %}" 
+                                <a class="nav-link {% if request.resolver_match.url_name == 'email_alert_configs' %}active{% endif %}"
                                 href="{% url 'alertas:email_alert_configs' %}">
                                     <i class="bi bi-envelope"></i> Alertas por correo
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'calendario_eventos' %}active{% endif %}"
+                                href="{% url 'alertas:calendario_eventos' %}">
+                                    <i class="bi bi-calendar-event"></i> Calendario Eventos
                                 </a>
                             </li>
                         </ul>

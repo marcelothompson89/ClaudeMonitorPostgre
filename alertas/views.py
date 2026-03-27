@@ -22,10 +22,12 @@ from .services import send_alert_email
 
 import json
 import datetime
+import re
 
 
-from .models import Alerta, User, Keyword, EmailAlertConfig
-from .forms import AlertaFilterForm, KeywordForm, EmailAlertConfigForm
+from .models import Alerta, User, Keyword, EmailAlertConfig, Evento
+from .forms import AlertaFilterForm, KeywordForm, EmailAlertConfigForm, EventoForm
+from .utils import contains_event_keywords, extract_dates_from_text, suggest_event_type
 
 @login_required
 def get_keywords_for_user(request):
@@ -98,21 +100,20 @@ def alertas_list(request):
         if user_id:
             selected_keywords = request.GET.getlist('keywords')
             if selected_keywords:
-                keyword_conditions = Q()
-                for kw in selected_keywords:
-                    keyword_conditions |= Q(title__icontains=kw) | Q(description__icontains=kw)
-                
-                alertas_query = alertas_query.filter(keyword_conditions)
+                pattern = '|'.join(re.escape(kw) for kw in selected_keywords)
+                alertas_query = alertas_query.filter(
+                    Q(title__iregex=pattern) | Q(description__iregex=pattern)
+                )
     
     # Aplicar filtro automático por palabras clave del usuario actual si está activo
     if keyword_filter_active:
-        user_keywords = Keyword.objects.filter(user=request.user, active=True).values_list('word', flat=True)
+        user_keywords = list(Keyword.objects.filter(user=request.user, active=True).values_list('word', flat=True))
         if user_keywords:
-            keyword_conditions = Q()
-            for kw in user_keywords:
-                keyword_conditions |= Q(title__icontains=kw) | Q(description__icontains=kw)
-            
-            alertas_query = alertas_query.filter(keyword_conditions)
+            # Combinar todas las keywords en un solo regex para evitar N queries LIKE
+            pattern = '|'.join(re.escape(kw) for kw in user_keywords)
+            alertas_query = alertas_query.filter(
+                Q(title__iregex=pattern) | Q(description__iregex=pattern)
+            )
     
     # Paginación (valor fijo de 30 registros por página)
     page_size = 30
@@ -139,7 +140,7 @@ def alertas_list(request):
     context = {
         'form': form,
         'page_obj': page_obj,
-        'total_alertas': alertas_query.count(),
+        'total_alertas': paginator.count,
         'min_date': min_date.strftime('%Y-%m-%d'),
         'max_date': max_date.strftime('%Y-%m-%d'),
         'user_keywords': user_keywords,
@@ -379,3 +380,169 @@ def get_institutions_by_country(request):
     institution_choices.extend([(inst, inst) for inst in query if inst])
     
     return JsonResponse({'institutions': institution_choices})
+
+
+# ==================== Calendario de Eventos ====================
+
+EVENTO_COLORES = {
+    'evento': '#002D62',
+    'comite': '#198754',
+    'politico': '#dc3545',
+    'feriado': '#ffc107',
+    'conferencia': '#0dcaf0',
+    'otro': '#6c757d',
+}
+
+@login_required
+def calendario_eventos(request):
+    form = EventoForm()
+    return render(request, 'alertas/calendario_eventos.html', {'form': form})
+
+@login_required
+def api_eventos(request):
+    start = request.GET.get('start', '')[:10]  # Solo YYYY-MM-DD
+    end = request.GET.get('end', '')[:10]
+
+    eventos = Evento.objects.all()
+    if start:
+        eventos = eventos.filter(
+            Q(fecha_inicio__gte=start) | Q(fecha_fin__gte=start)
+        )
+    if end:
+        eventos = eventos.filter(fecha_inicio__lte=end)
+
+    eventos = eventos.distinct()
+
+    data = []
+    for ev in eventos:
+        end_date = ev.fecha_fin.isoformat() if ev.fecha_fin else None
+        # FullCalendar: end es exclusivo, sumar 1 día para que incluya el último día
+        if end_date:
+            end_date = (ev.fecha_fin + datetime.timedelta(days=1)).isoformat()
+
+        data.append({
+            'id': ev.id,
+            'title': ev.titulo,
+            'start': ev.fecha_inicio.isoformat(),
+            'end': end_date,
+            'color': EVENTO_COLORES.get(ev.tipo, '#6c757d'),
+            'extendedProps': {
+                'tipo': ev.get_tipo_display(),
+                'descripcion': ev.descripcion,
+                'ubicacion': ev.ubicacion,
+                'created_by': ev.created_by.get_full_name() if ev.created_by else '',
+                'fecha_inicio': ev.fecha_inicio.isoformat(),
+                'fecha_fin': ev.fecha_fin.isoformat() if ev.fecha_fin else '',
+                'tipo_value': ev.tipo,
+            },
+        })
+
+    return JsonResponse(data, safe=False)
+
+@login_required
+@require_POST
+def crear_evento(request):
+    form = EventoForm(request.POST)
+    if form.is_valid():
+        evento = form.save(commit=False)
+        evento.created_by = request.user
+        evento.save()
+        return JsonResponse({
+            'success': True,
+            'evento': {
+                'id': evento.id,
+                'title': evento.titulo,
+                'start': evento.fecha_inicio.isoformat(),
+                'end': (evento.fecha_fin + datetime.timedelta(days=1)).isoformat() if evento.fecha_fin else None,
+                'color': EVENTO_COLORES.get(evento.tipo, '#6c757d'),
+            }
+        })
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+@login_required
+@require_POST
+def editar_evento(request, pk):
+    evento = get_object_or_404(Evento, pk=pk)
+    form = EventoForm(request.POST, instance=evento)
+    if form.is_valid():
+        form.save()
+        return JsonResponse({
+            'success': True,
+            'evento': {
+                'id': evento.id,
+                'title': evento.titulo,
+                'start': evento.fecha_inicio.isoformat(),
+                'end': (evento.fecha_fin + datetime.timedelta(days=1)).isoformat() if evento.fecha_fin else None,
+                'color': EVENTO_COLORES.get(evento.tipo, '#6c757d'),
+            }
+        })
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+@login_required
+@require_POST
+def eliminar_evento(request, pk):
+    evento = get_object_or_404(Evento, pk=pk)
+    evento.delete()
+    return JsonResponse({'success': True})
+
+@login_required
+def api_eventos_potenciales(request):
+    """Devuelve alertas del último mes que podrían ser eventos."""
+    # Obtener alertas del último mes
+    one_month_ago = timezone.now() - datetime.timedelta(days=30)
+
+    alertas = Alerta.objects.filter(
+        presentation_date__gte=one_month_ago
+    ).order_by('-presentation_date')[:100]  # Límite de 100 para eficiencia
+
+    # Filtrar solo las que contienen palabras clave de eventos
+    potenciales = []
+    for alerta in alertas:
+        text = f"{alerta.title} {alerta.description or ''}"
+
+        if contains_event_keywords(text):
+            # Extraer fechas del texto
+            dates = extract_dates_from_text(text)
+            suggested_type = suggest_event_type(alerta.title, alerta.description or '')
+
+            potenciales.append({
+                'id': alerta.id,
+                'title': alerta.title[:100],  # Truncar para UI
+                'description': (alerta.description or '')[:150],
+                'source': alerta.institution,
+                'country': alerta.country,
+                'category': alerta.category,
+                'source_url': alerta.source_url,
+                'presentation_date': alerta.presentation_date.isoformat() if alerta.presentation_date else None,
+                'detected_start_date': dates['start_date'].isoformat() if dates['start_date'] else None,
+                'detected_end_date': dates['end_date'].isoformat() if dates['end_date'] else None,
+                'suggested_type': suggested_type,
+            })
+
+    # Limitar a 20 eventos potenciales más recientes
+    return JsonResponse(potenciales[:20], safe=False)
+
+@login_required
+@require_POST
+def convertir_alerta_a_evento(request, alerta_id):
+    """Convierte una alerta en evento definitivo del calendario."""
+    alerta = get_object_or_404(Alerta, id=alerta_id)
+    form = EventoForm(request.POST)
+
+    if form.is_valid():
+        evento = form.save(commit=False)
+        evento.created_by = request.user
+        evento.save()
+
+        return JsonResponse({
+            'success': True,
+            'evento': {
+                'id': evento.id,
+                'title': evento.titulo,
+                'start': evento.fecha_inicio.isoformat(),
+                'end': (evento.fecha_fin + datetime.timedelta(days=1)).isoformat() if evento.fecha_fin else None,
+                'color': EVENTO_COLORES.get(evento.tipo, '#6c757d'),
+            }
+        })
+
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)

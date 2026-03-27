@@ -24,4 +24,13 @@ urlpatterns = [
     
     # Nueva URL para obtener las instituciones por país
     path('api/institutions-by-country/', views.get_institutions_by_country, name='get_institutions_by_country'),
+
+    # Calendario de eventos
+    path('calendario/', views.calendario_eventos, name='calendario_eventos'),
+    path('calendario/api/eventos/', views.api_eventos, name='api_eventos'),
+    path('calendario/api/eventos-potenciales/', views.api_eventos_potenciales, name='api_eventos_potenciales'),
+    path('calendario/evento/crear/', views.crear_evento, name='crear_evento'),
+    path('calendario/evento/<int:pk>/editar/', views.editar_evento, name='editar_evento'),
+    path('calendario/evento/<int:pk>/eliminar/', views.eliminar_evento, name='eliminar_evento'),
+    path('calendario/alerta/<int:alerta_id>/convertir/', views.convertir_alerta_a_evento, name='convertir_alerta_a_evento'),
 ]
