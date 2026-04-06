@@ -446,6 +446,48 @@ AVAILABLE_SCRAPERS = {
         'name': 'COMISCA Noticias',
         'description': 'Obtiene noticias de COMISCA'       
     },
+    'swisscam_eventos':{
+        'module': 'scrapers.scrapers.swisscam_eventos_br',
+        'function': 'scrape_swisscam_eventos_br',
+        'name': 'SwissCam Eventos',
+        'description': 'Obtiene eventos de SwissCam Brasil'       
+    },
+    'abimo_eventos':{
+        'module': 'scrapers.scrapers.abimo_eventos_br',
+        'function': 'scrape_abimo_eventos_br',
+        'name': 'ABIMO Eventos',
+        'description': 'Obtiene eventos de ABIMO Brasil'       
+    },
+    'apexbrasil_eventos':{
+        'module': 'scrapers.scrapers.apexbrasil_eventos_br',
+        'function': 'scrape_apexbrasil_eventos_br',
+        'name': 'ApexBrasil Eventos',
+        'description': 'Obtiene eventos de ApexBrasil'       
+    },
+    'bamberg_eventos':{
+        'module': 'scrapers.scrapers.bamberg_eventos_glo',
+        'function': 'scrape_bamberg_eventos_glo',
+        'name': 'Bamberg Eventos',
+        'description': 'Obtiene eventos de Bamberg Health'       
+    },
+    'eu_partnerships_noticias':{
+        'module': 'scrapers.scrapers.eu_partnerships_noticias_reg',
+        'function': 'scrape_eu_partnerships_noticias_reg',
+        'name': 'EU Partnerships Noticias',
+        'description': 'Obtiene noticias de EU Partnerships'       
+    },
+    'panorama_eventos':{
+        'module': 'scrapers.scrapers.panorama_eventos_br',
+        'function': 'scrape_panorama_eventos_br',
+        'name': 'Panorama Eventos',
+        'description': 'Obtiene eventos de Panorama Farmacêutico'       
+    },
+
+
+
+
+
+
 
 
 
