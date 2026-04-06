@@ -13,7 +13,9 @@ EVENT_KEYWORDS = [
     'charla', 'curso', 'capacitación', 'training', 'cumbre', 'summit',
     'mesa redonda', 'panel', 'debate', 'expo', 'feria', 'exhibición',
     'lanzamiento', 'presentación', 'inauguración', 'ceremonia',
-    'asamblea', 'cita', 'audiencia', 'consulta pública'
+    'asamblea', 'cita', 'audiencia', 'consulta pública','convergencia regulatoria',
+    'autoridades regulatorias', 'armonización regulatoria','agencias sanitarias',
+    'reliance regulatorio','simplificación administrativa'
 ]
 
 

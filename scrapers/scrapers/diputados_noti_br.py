@@ -46,22 +46,40 @@ async def scrape_diputados_noti_br():
                     enlace = titulo_tag["href"] if titulo_tag else None
                     url_completa = f"https://www.camara.leg.br{enlace}" if enlace and not enlace.startswith("http") else enlace
 
-                    # Extraer fecha y hora (están en elementos separados)
+                    # Extraer fecha y hora
                     fecha_tag = noticia.select_one("span.g-chamada__data")
-                    hora_tag = noticia.select_one("span.g-chamada__hora")
-                    
                     fecha_texto = fecha_tag.text.strip() if fecha_tag else None
-                    hora_texto = hora_tag.text.strip() if hora_tag else None
-                    
+
                     fecha_actual = None
-                    if fecha_texto and hora_texto:
+                    if fecha_texto:
                         try:
-                            fecha_hora_completa = f"{fecha_texto} {hora_texto}"
-                            fecha_actual = datetime.strptime(fecha_hora_completa, "%d/%m/%Y %H:%M")
-                        except ValueError as e:
-                            print(f"Fecha inválida: {fecha_hora_completa} - Error: {e}")
-                    else:
-                        print(f"Fecha u hora no encontradas. Fecha: {fecha_texto}, Hora: {hora_texto}")
+                            # Intentar parsear si la fecha ya incluye la hora (formato "DD/MM/YYYY HH:MM")
+                            fecha_actual = datetime.strptime(fecha_texto, "%d/%m/%Y %H:%M")
+                        except ValueError:
+                            # Si falla, intentar buscar hora en elemento separado
+                            hora_tag = noticia.select_one("span.g-chamada__hora")
+                            hora_texto = hora_tag.text.strip() if hora_tag else None
+                            if hora_texto:
+                                try:
+                                    fecha_hora_completa = f"{fecha_texto} {hora_texto}"
+                                    fecha_actual = datetime.strptime(fecha_hora_completa, "%d/%m/%Y %H:%M")
+                                except ValueError:
+                                    # Si tampoco funciona, intentar solo con fecha
+                                    try:
+                                        fecha_actual = datetime.strptime(fecha_texto, "%d/%m/%Y")
+                                    except ValueError as e:
+                                        print(f"No se pudo parsear la fecha: {fecha_texto} - Error: {e}")
+                            else:
+                                # Intentar parsear solo la fecha sin hora
+                                try:
+                                    fecha_actual = datetime.strptime(fecha_texto, "%d/%m/%Y")
+                                except ValueError as e:
+                                    print(f"No se pudo parsear la fecha: {fecha_texto} - Error: {e}")
+
+                    # Si no se pudo obtener fecha, usar la fecha actual como fallback
+                    if fecha_actual is None:
+                        fecha_actual = datetime.now()
+                        print(f"Usando fecha actual como fallback para: {titulo}")
 
                     # Extraer descripción
                     descripcion_tag = noticia.select_one("img.g-chamada__imagem")
