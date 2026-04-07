@@ -5,7 +5,7 @@ from datetime import datetime, date
 import re
 
 
-async def scrape_cepal_noticias():
+async def scrape_cepal_noti_reg():
     """
     Scraper para la sección de noticias de CEPAL utilizando Playwright.
     """
@@ -29,15 +29,15 @@ async def scrape_cepal_noticias():
             print(f"Navegando a: {url}")
             await page.goto(url, timeout=60000, wait_until="domcontentloaded")
 
-            # Esperar que se carguen los artículos
-            await page.wait_for_selector("article", timeout=60000)
+            # Esperar que se carguen los resultados de búsqueda
+            await page.wait_for_selector("div.search-list", timeout=60000)
 
             # Extraer HTML renderizado
             html = await page.content()
             soup = BeautifulSoup(html, "html.parser")
 
-            # Buscar todos los artículos
-            articulos = soup.find_all("article", class_="py-3")
+            # Buscar todos los resultados
+            articulos = soup.find_all("div", class_="search-list")
 
             for articulo in articulos:
                 try:
@@ -48,8 +48,8 @@ async def scrape_cepal_noticias():
                     enlace_relativo = enlace_tag["href"] if enlace_tag else None
                     source_url = f"{base_url}{enlace_relativo}" if enlace_relativo and not enlace_relativo.startswith("http") else enlace_relativo
 
-                    # B) Extraer fecha desde div con data-component-id
-                    fecha_div = articulo.find("div", attrs={"data-component-id": "eclacstrap_base:header-date"})
+                    # B) Extraer fecha desde div con clase d-flex (ej: "6 Abr 2026 | Nota informativa")
+                    fecha_div = articulo.find("div", class_="d-flex")
                     fecha_texto = fecha_div.get_text(strip=True) if fecha_div else None
                     presentation_date = _parse_date_cepal(fecha_texto)
 
@@ -57,8 +57,8 @@ async def scrape_cepal_noticias():
                     if not presentation_date:
                         presentation_date = date.today()
 
-                    # C) Extraer descripción desde p
-                    descripcion_tag = articulo.find("p", class_="pb-3")
+                    # C) Extraer descripción desde div.border-top
+                    descripcion_tag = articulo.find("div", class_="border-top")
                     description = descripcion_tag.get_text(strip=True) if descripcion_tag else title
 
                     # Crear objeto en el formato esperado
@@ -135,7 +135,7 @@ def _parse_date_cepal(date_str):
 
 if __name__ == "__main__":
     # Ejecutar el scraper de forma asíncrona
-    items = asyncio.run(scrape_cepal_noticias())
+    items = asyncio.run(scrape_cepal_noti_reg())
 
     # Imprimir resultados
     print(f"\nTotal de noticias encontradas: {len(items)}\n")
