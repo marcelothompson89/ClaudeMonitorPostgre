@@ -531,7 +531,7 @@ def parse_spanish_date(fecha_str):
 
 if __name__ == "__main__":
     # Ejecutar el scraper y mostrar los resultados
-    items = asyncio.run(scrape_invima_proyectos_normativos_v2())
+    items = asyncio.run(scrape_invima_proyectos_normativos_co())
 
     if items:
         # Formatear salida como JSON
