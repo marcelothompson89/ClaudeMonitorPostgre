@@ -1,543 +1,399 @@
+"""
+Scraper de Proyectos Normativos del INVIMA (Colombia).
+
+El sitio corre sobre Odoo. La página de proyectos normativos es un único bloque
+de contenido plano (una secuencia de <p>, <h2>, <ul>, <ol>) donde cada proyecto
+está separado por:
+  - un separador <hr> envuelto en <div class="s_hr"> , o
+  - un párrafo formado solo por guiones bajos ("______...").
+
+Además, los slugs de /biblioteca/ vienen SIN punto antes de la extensión
+(p. ej. "...-publicacionpdf", "...-revisadodocx"), por eso no se filtra por
+extensión: se toma cualquier enlace a /biblioteca/.
+
+Uso:
+    python scraper_invima.py                 # scrapea el sitio en vivo
+    python scraper_invima.py archivo.html    # parsea un HTML local (para pruebas)
+"""
+
 import asyncio
-import httpx
-from bs4 import BeautifulSoup
-from datetime import datetime
 import json
+import logging
 import re
+import sys
+from datetime import datetime
 
-async def scrape_invima_proyectos_normativos_co():
-    """
-    Scraper simplificado para la página de proyectos normativos del INVIMA.
-    Enfoque: extraer todo el texto y procesar secuencialmente.
-    """
-    url = "https://www.invima.gov.co/normatividad/proyectos-normativos"
-    items = []
+import httpx
+from bs4 import BeautifulSoup, NavigableString, Tag
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+logger = logging.getLogger("scraper_invima")
+
+BASE_URL = "https://www.invima.gov.co"
+PAGE_URL = f"{BASE_URL}/normatividad/proyectos-normativos"
+
+# Constantes de salida (iguales a tu contrato original)
+SOURCE_TYPE = "Ejecutivo"
+CATEGORY = "Proyectos Normativos"
+COUNTRY = "Colombia"
+INSTITUTION = "INVIMA Colombia"
+
+MESES = {
+    "enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6,
+    "julio": 7, "agosto": 8, "septiembre": 9, "setiembre": 9, "octubre": 10,
+    "noviembre": 11, "diciembre": 12,
+}
+
+DATE_TEXT_RE = re.compile(r"(\d{1,2})\s+de\s+([a-záéíóúñ]+)\s+de\s+(\d{4})", re.IGNORECASE)
+DATE_NUM_RE = re.compile(r"(?<!\d)(\d{1,2})/(\d{1,2})/(\d{4})(?!\d)")
+EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+
+# Palabras clave para clasificar fechas como inicio / fin de consulta
+START_KW = ("inicio", "inicia", "publicaci", "desde", "apertura", "publicar")
+END_KW = ("finaliz", "cierre", "hasta", "plazo", "vence", "final ")
+
+# Detecta el comienzo de un proyecto (para el corte secundario dentro de un bloque)
+PROJECT_START_RE = re.compile(
+    r"^\s*(?:proyecto\s+de\s+resoluci[oó]n"
+    r"|proyecto\s+resoluci[oó]n"
+    r"|proyecto\s+de\s+circular"
+    r"|publicaci[oó]n\s+para\s+comentarios"
+    r"|se\s+publican?\s+el\s+proyecto"
+    r"|por\s+medio\s+de\s+la\s+cual"
+    r"|en\s+cumplimiento\s+de\s+lo\s+dispuesto)",
+    re.IGNORECASE,
+)
+
+
+# --------------------------------------------------------------------------- #
+# Utilidades
+# --------------------------------------------------------------------------- #
+def clean_ws(text: str) -> str:
+    """Normaliza espacios (incluye &nbsp;) y colapsa saltos de línea."""
+    return re.sub(r"\s+", " ", (text or "").replace("\xa0", " ")).strip()
+
+
+def abs_url(href: str) -> str | None:
+    href = (href or "").strip()
+    if not href:
+        return None
+    if href.startswith("http://") or href.startswith("https://"):
+        return href
+    if href.startswith("/"):
+        return BASE_URL + href
+    return None
+
+
+def parse_date_token(day: str, month_token: str, year: str) -> datetime | None:
+    try:
+        mon = MESES.get(month_token.lower())
+        if not mon:
+            return None
+        return datetime(int(year), mon, int(day))
+    except (ValueError, TypeError):
+        return None
+
+
+def find_dates(text: str) -> list[tuple[int, datetime]]:
+    """Devuelve [(posición, fecha)] para fechas textuales y numéricas."""
+    results: list[tuple[int, datetime]] = []
+    for m in DATE_TEXT_RE.finditer(text):
+        dt = parse_date_token(m.group(1), m.group(2), m.group(3))
+        if dt:
+            results.append((m.start(), dt))
+    for m in DATE_NUM_RE.finditer(text):
         try:
-            # Realizar la solicitud HTTP
-            response = await client.get(url)
-            if response.status_code != 200:
-                print(f"Error: No se pudo acceder a la página. Código {response.status_code}")
-                return []
-
-            # Parsear el HTML de la página
-            soup = BeautifulSoup(response.text, "html.parser")
-            print(f"HTML obtenido, tamaño: {len(response.text)} caracteres")
-
-            # Buscar todos los enlaces de proyectos
-            enlaces_proyectos = soup.find_all("a", href=re.compile(r"\.pdf$|\.docx?$"))
-            print(f"Encontrados {len(enlaces_proyectos)} enlaces a documentos")
-
-            # Filtrar solo proyectos de resolución
-            proyectos_validos = []
-            for enlace in enlaces_proyectos:
-                texto_enlace = enlace.get_text(strip=True)
-                if any(keyword in texto_enlace.lower() for keyword in ["proyecto", "resolución", "resolution"]):
-                    proyectos_validos.append(enlace)
-
-            print(f"Proyectos válidos encontrados: {len(proyectos_validos)}")
-
-            # Dividir el contenido en bloques basados en separadores HTML específicos
-            bloques_html = dividir_contenido_por_separadores_html(soup)
-            print(f"Contenido dividido en {len(bloques_html)} bloques HTML")
-
-            # También extraer texto completo como fallback
-            texto_completo = soup.get_text()
-            print(f"Texto completo extraído: {len(texto_completo)} caracteres")
-
-            # Procesar cada proyecto válido
-            for i, enlace in enumerate(proyectos_validos):
-                try:
-                    texto_enlace = enlace.get_text(strip=True)
-                    
-                    print(f"\n--- Procesando proyecto {i+1}: {texto_enlace[:50]}... ---")
-                    
-                    # Verificar que este enlace es realmente el del título principal
-                    if not es_enlace_titulo_principal(enlace):
-                        print("Este enlace no es del título principal, saltando...")
-                        continue
-                    
-                    # El source_url siempre será el enlace del título "Proyecto de Resolución"
-                    href = enlace.get("href", "")
-                    if href.startswith("/"):
-                        url_completa = f"https://www.invima.gov.co{href}"
-                    else:
-                        url_completa = href
-                    
-                    print(f"URL del proyecto principal: {url_completa}")
-                    
-                    # Encontrar el bloque HTML correspondiente a este proyecto
-                    bloque_proyecto = encontrar_bloque_html_proyecto(enlace, bloques_html)
-                    if not bloque_proyecto:
-                        # Fallback: buscar en texto completo
-                        print("No se encontró bloque HTML, usando fallback de texto...")
-                        bloque_proyecto = extraer_contexto_proyecto(texto_enlace, texto_completo)
-                    
-                    print(f"Bloque encontrado: {bloque_proyecto[:300]}...")
-                    
-                    # Extraer título y descripción del bloque (incluyendo otros enlaces)
-                    titulo, descripcion = extraer_titulo_y_descripcion_con_enlaces(bloque_proyecto, enlace, bloques_html)
-                    
-                    print(f"Título extraído: {titulo[:100]}...")
-                    print(f"Descripción: {descripcion[:200]}...")
-                    
-                    # Extraer información del bloque para debugging
-                    fecha_publicacion = extract_date_from_text(bloque_proyecto, "publicación")
-                    fecha_finalizacion = extract_date_from_text(bloque_proyecto, "finalización")
-                    correo_observaciones = extract_email_from_text(bloque_proyecto)
-                    
-                    print(f"Datos extraídos (solo para debugging):")
-                    print(f"  - Fecha publicación: {fecha_publicacion}")
-                    print(f"  - Fecha finalización: {fecha_finalizacion}")
-                    print(f"  - Correo: {correo_observaciones}")
-                    
-                    # Determinar el estado solo para debugging
-                    estado = "Activo"
-                    if fecha_finalizacion and fecha_finalizacion < datetime.now():
-                        estado = "Finalizado"
-                    print(f"  - Estado: {estado}")
-                    
-                    # Crear el item
-                    item = {
-                        'title': titulo,
-                        'description': descripcion,
-                        'source_type': "Ejecutivo",
-                        'category': "Proyectos Normativos",
-                        'country': "Colombia",
-                        'source_url': url_completa,
-                        'presentation_date': datetime.now(),  # Fecha de extracción
-                        'institution': "INVIMA Colombia"
-                    }
-                    
-                    items.append(item)
-
-                except Exception as e:
-                    print(f"Error procesando proyecto: {e}")
-                    continue
-
-        except Exception as e:
-            print(f"Error al realizar la solicitud: {e}")
-            return []
-
-    print(f"\nTotal de proyectos extraídos: {len(items)}")
-    return items
+            results.append((m.start(), datetime(int(m.group(3)), int(m.group(2)), int(m.group(1)))))
+        except ValueError:
+            pass  # p. ej. 31/13/2026
+    results.sort(key=lambda x: x[0])
+    return results
 
 
-def dividir_contenido_por_separadores_html(soup):
-    """
-    Divide el contenido HTML en bloques basándose en separadores específicos:
-    <hr> y <p>&nbsp;</p>
-    """
-    bloques = []
-    
-    # Buscar el contenedor principal
-    contenedor_principal = None
-    selectores = [
-        ".field--name-body .field__item",
-        ".node__content .field__item", 
-        ".text-formatted.field__item",
-        ".clearfix.text-formatted.field",
-        "article .node__content"
-    ]
-    
-    for selector in selectores:
-        contenedor_principal = soup.select_one(selector)
-        if contenedor_principal:
-            break
-    
-    if not contenedor_principal:
-        contenedor_principal = soup
-    
-    # Obtener todos los elementos hijos
-    elementos = list(contenedor_principal.children)
-    
-    # Filtrar solo elementos reales (no text nodes)
-    elementos_reales = [elem for elem in elementos if hasattr(elem, 'name') and elem.name]
-    
-    bloque_actual = []
-    
-    for elemento in elementos_reales:
-        # Verificar si es un separador
-        es_separador = False
-        
-        # Separador HR
-        if elemento.name == 'hr':
-            es_separador = True
-        
-        # Separador <p>&nbsp;</p>
-        elif elemento.name == 'p':
-            texto_p = elemento.get_text(strip=True)
-            # Verificar si es un párrafo vacío o solo con &nbsp;
-            if not texto_p or texto_p == '\xa0' or texto_p == '' or '&nbsp;' in str(elemento):
-                # Verificar que no contenga enlaces importantes
-                if not elemento.find('a', href=True):
-                    es_separador = True
-        
-        if es_separador:
-            # Si encontramos un separador y hay contenido en el bloque actual
-            if bloque_actual:
-                bloque_texto = extraer_texto_de_elementos(bloque_actual)
-                if len(bloque_texto.strip()) > 50:  # Solo bloques significativos
-                    bloques.append({
-                        'texto': bloque_texto,
-                        'elementos': bloque_actual.copy()
-                    })
-                bloque_actual = []
-        else:
-            # Agregar elemento al bloque actual
-            bloque_actual.append(elemento)
-    
-    # Agregar el último bloque si existe
-    if bloque_actual:
-        bloque_texto = extraer_texto_de_elementos(bloque_actual)
-        if len(bloque_texto.strip()) > 50:
-            bloques.append({
-                'texto': bloque_texto,
-                'elementos': bloque_actual.copy()
-            })
-    
-    print(f"Separadores encontrados y bloques creados: {len(bloques)}")
-    return bloques
+def extract_period(text: str) -> tuple[datetime | None, datetime | None]:
+    """Extrae (inicio, fin) de consulta según palabras clave cercanas."""
+    dates = find_dates(text)
+    if not dates:
+        return None, None
+
+    start = end = None
+    for pos, dt in dates:
+        window = text[max(0, pos - 45):pos].lower()
+        if any(k in window for k in END_KW):
+            if end is None:
+                end = dt
+        elif any(k in window for k in START_KW):
+            if start is None:
+                start = dt
+
+    # Fallback: si no se pudo clasificar, usar orden de aparición
+    ordered = [dt for _, dt in dates]
+    if start is None:
+        start = ordered[0]
+    if end is None and len(ordered) > 1:
+        end = ordered[-1]
+    return start, end
 
 
-def extraer_texto_de_elementos(elementos):
-    """
-    Extrae texto limpio de una lista de elementos HTML.
-    """
-    textos = []
-    for elem in elementos:
-        if hasattr(elem, 'get_text'):
-            texto = elem.get_text()
-            if texto.strip():
-                textos.append(texto.strip())
-    
-    return ' '.join(textos).replace('\n', ' ').replace('\r', ' ')
+def extract_email(text: str, tags: list[Tag]) -> str | None:
+    # 1) enlaces mailto:
+    for tag in tags:
+        for a in tag.find_all("a", href=True):
+            href = a["href"].lower()
+            if href.startswith("mailto:"):
+                return href.split(":", 1)[1].split("?")[0].strip()
+    # 2) email cercano a "observaciones/correo/comentarios"
+    for m in EMAIL_RE.finditer(text):
+        window = text[max(0, m.start() - 60):m.start()].lower()
+        if any(k in window for k in ("observ", "correo", "comentario", "remitir")):
+            return m.group(0)
+    # 3) cualquier email de invima
+    for m in EMAIL_RE.finditer(text):
+        if "invima" in m.group(0).lower():
+            return m.group(0)
+    # 4) el primero que aparezca
+    m = EMAIL_RE.search(text)
+    return m.group(0) if m else None
 
 
-def encontrar_bloque_html_proyecto(enlace, bloques_html):
-    """
-    Encuentra el bloque HTML que contiene un enlace específico.
-    """
-    for bloque in bloques_html:
-        # Verificar si el enlace está en alguno de los elementos del bloque
-        for elemento in bloque['elementos']:
-            if enlace in elemento.find_all('a', href=True):
-                return bloque['texto']
-    
-    return None
+def extract_documents(tags: list[Tag]) -> list[dict]:
+    docs: list[dict] = []
+    seen: set[str] = set()
+    for tag in tags:
+        for a in tag.find_all("a", href=True):
+            href = a["href"].strip()
+            if href.lower().startswith("mailto:"):
+                continue
+            # descartar hrefs con email mal formados (http://correo@dominio)
+            if "@" in href and "/biblioteca/" not in href:
+                continue
+            url = abs_url(href)
+            if not url or url in seen:
+                continue
+            seen.add(url)
+            docs.append({"text": clean_ws(a.get_text()), "url": url})
+    return docs
 
 
-def extraer_contexto_proyecto(texto_enlace, texto_completo):
-    """
-    Extrae contexto alrededor de la mención de un proyecto en el texto completo.
-    """
-    # Buscar el texto del enlace o partes de él
-    texto_busqueda = texto_enlace.replace('"', '').replace('"', '').replace('"', '')
-    
-    # Intentar buscar fragmentos del título
-    fragmentos = [texto_busqueda[:50], texto_busqueda[:30], texto_busqueda[:20]]
-    
-    for fragmento in fragmentos:
-        posicion = texto_completo.lower().find(fragmento.lower())
-        if posicion != -1:
-            # Extraer contexto amplio
-            inicio = max(0, posicion - 500)
-            fin = min(len(texto_completo), posicion + 1500)
-            return texto_completo[inicio:fin]
-    
-    return ""
+def pick_main_url(docs: list[dict]) -> str | None:
+    prefixes = ("proyecto de resoluci", "proyecto de circular", "proyecto resoluci")
+    for d in docs:
+        if d["text"].lower().startswith(prefixes):
+            return d["url"]
+    for d in docs:
+        if "proyecto" in d["text"].lower():
+            return d["url"]
+    return docs[0]["url"] if docs else None
 
 
-def extract_date_from_text(texto, tipo_fecha):
-    """
-    Extrae fechas del texto con múltiples patrones.
-    """
-    # Patrones específicos para cada tipo de fecha
-    if tipo_fecha == "publicación":
-        patrones = [
-            r'Fecha de publicación[^:]*:\s*([^\.]+?)(?=\s*Fecha|\s*Correo|\s*Respuesta|\s*$)',
-            r'publicación[^:]*:\s*([^\.]+?)(?=\s*Fecha|\s*Correo|\s*Respuesta|\s*$)',
-            r'Fecha de publicación[^:]*:\s*(\w+\s+\d{1,2}\s+de\s+\w+\s+de\s+\d{4})',
-            r'Fecha de publicación[^:]*:\s*(\d{1,2}\s+de\s+\w+\s+de\s+\d{4})',
-        ]
-    else:  # finalización
-        patrones = [
-            r'Fecha de finalizaci[oó]n[^:]*:\s*([^\.]+?)(?=\s*Correo|\s*Respuesta|\s*$)',
-            r'finalizaci[oó]n[^:]*:\s*([^\.]+?)(?=\s*Correo|\s*Respuesta|\s*$)',
-            r'Fecha de finalizaci[oó]n[^:]*:\s*(\w+\s+\d{1,2}\s+de\s+\w+\s+de\s+\d{4})',
-            r'Fecha de finalizaci[oó]n[^:]*:\s*(\d{1,2}\s+de\s+\w+\s+de\s+\d{4})',
-        ]
-    
-    for patron in patrones:
-        match = re.search(patron, texto, re.IGNORECASE)
-        if match:
-            fecha_str = match.group(1).strip()
-            # Limpiar caracteres no deseados
-            fecha_str = re.sub(r'[^\w\s]', '', fecha_str)
-            parsed_date = parse_spanish_date(fecha_str)
-            if parsed_date:
-                return parsed_date
-    
-    return None
+def detect_kind(text: str) -> str:
+    t = text.lower()
+    if "proyecto de circular" in t or "proyecto de acto administrativo" in t:
+        return "Proyecto de Circular"
+    if "proyecto de resoluci" in t or "proyecto resoluci" in t:
+        return "Proyecto de Resolución"
+    if "circular" in t:
+        return "Proyecto de Circular"
+    if "resoluci" in t:
+        return "Proyecto de Resolución"
+    return "Proyecto Normativo"
 
 
-def extract_email_from_text(texto):
-    """
-    Extrae correos electrónicos del texto.
-    """
-    patrones = [
-        r'[Cc]orreo electr[oó]nico[^:]*:\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})',
-        r'observaciones[^:]*:\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})',
-        r'consulta[^:]*:\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})',
-    ]
-    
-    for patron in patrones:
-        match = re.search(patron, texto, re.IGNORECASE)
-        if match:
-            return match.group(1).strip()
-    
-    # Búsqueda general de correos que contengan "invima"
-    correos = re.findall(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', texto)
-    for correo in correos:
-        if 'invima' in correo.lower():
-            return correo.strip()
-    
-    return None
+def extract_title(block_text: str, tags: list[Tag]) -> str:
+    # 1) primer texto entrecomillado (con comillas tipográficas o rectas)
+    m = re.search(r'[“"]([^”"]{15,400})[”"]', block_text)
+    if m:
+        title = clean_ws(m.group(1))
+        kind = detect_kind(block_text)
+        if kind.split()[-1].lower() not in title.lower():
+            return f"{kind}: {title}"
+        return title
+    # 2) primer encabezado h1/h2/h3 del bloque
+    for tag in tags:
+        heading = tag if tag.name in ("h1", "h2", "h3") else tag.find(["h1", "h2", "h3"])
+        if heading and heading.get_text(strip=True):
+            return clean_ws(heading.get_text())
+    # 3) primera oración significativa
+    first = clean_ws(block_text)
+    return (first[:200] + "…") if len(first) > 200 else first
 
 
-def es_enlace_titulo_principal(enlace):
-    """
-    Verifica si un enlace corresponde al título principal "Proyecto de Resolución".
-    """
-    texto_enlace = enlace.get_text(strip=True)
-    
-    # Debe contener "Proyecto de Resolución" y ser relativamente largo (el título completo)
-    if "Proyecto de Resolución" in texto_enlace and len(texto_enlace) > 50:
+# --------------------------------------------------------------------------- #
+# Segmentación en bloques
+# --------------------------------------------------------------------------- #
+def find_content_container(soup: BeautifulSoup) -> Tag:
+    node = soup.select_one("div.s_allow_columns")
+    if node:
+        return node
+    # Fallback: el contenedor con más enlaces a /biblioteca/
+    best, best_count = None, 0
+    for div in soup.find_all(["div", "section", "article"]):
+        count = len(div.select('a[href*="/biblioteca/"]'))
+        if count > best_count:
+            best, best_count = div, count
+    return best or soup.body or soup
+
+
+def is_separator(node) -> bool:
+    if not isinstance(node, Tag):
+        return False
+    if node.name == "hr":
         return True
-    
-    # Si contiene "Proyecto" y es un enlace largo, probablemente es el principal
-    if "Proyecto" in texto_enlace and len(texto_enlace) > 80:
+    # <div class="s_hr"> ... <hr> ... </div>
+    if node.find("hr") is not None and clean_ws(node.get_text()) == "":
         return True
-    
+    # párrafo de guiones bajos
+    text = clean_ws(node.get_text())
+    if text and set(text) <= {"_"} and len(text) >= 8:
+        return True
     return False
 
 
-def extraer_titulo_y_descripcion_con_enlaces(bloque_texto, enlace_principal, bloques_html):
-    """
-    Extrae el título del enlace principal y la descripción incluyendo otros enlaces del bloque.
-    """
-    # Obtener el texto del enlace principal (que contiene el título)
-    texto_enlace_principal = enlace_principal.get_text(strip=True)
-    
-    # Extraer el título del enlace principal
-    titulo_completo = extraer_titulo_del_enlace(texto_enlace_principal)
-    
-    # Decidir si cortar el título por longitud
-    titulo_final = titulo_completo
-    descripcion_partes = []
-    
-    # Si el título es muy largo (más de 150 caracteres), cortarlo
-    if len(titulo_completo) > 150:
-        punto_corte = encontrar_punto_corte_titulo(titulo_completo)
-        titulo_final = titulo_completo[:punto_corte] + "..."
-        descripcion_partes.append(f"Título completo: {titulo_completo}")
-    
-    # Buscar el bloque HTML que contiene este enlace para encontrar otros enlaces
-    bloque_html_elementos = None
-    for bloque in bloques_html:
-        for elemento in bloque['elementos']:
-            if enlace_principal in elemento.find_all('a', href=True):
-                bloque_html_elementos = bloque['elementos']
-                break
-        if bloque_html_elementos:
-            break
-    
-    # Extraer contenido adicional incluyendo otros enlaces
-    contenido_adicional = extraer_contenido_con_enlaces_adicionales(
-        bloque_texto, texto_enlace_principal, bloque_html_elementos
-    )
-    
-    if contenido_adicional:
-        descripcion_partes.append(contenido_adicional)
-    
-    # Si no hay descripción adicional, usar una parte del título
-    if not descripcion_partes:
-        descripcion_partes.append(titulo_completo[:300] + ("..." if len(titulo_completo) > 300 else ""))
-    
-    descripcion_final = " | ".join(descripcion_partes)
-    
-    return titulo_final, descripcion_final
+def split_top_level(container: Tag) -> list[list[Tag]]:
+    """Corte primario por separadores (<hr> y párrafos de guiones bajos)."""
+    blocks: list[list[Tag]] = []
+    current: list[Tag] = []
+    for child in container.children:
+        if isinstance(child, NavigableString):
+            continue
+        if not isinstance(child, Tag):
+            continue
+        if is_separator(child):
+            if current:
+                blocks.append(current)
+                current = []
+        else:
+            current.append(child)
+    if current:
+        blocks.append(current)
+    return blocks
 
 
-def extraer_contenido_con_enlaces_adicionales(bloque_texto, texto_enlace_principal, elementos_html):
+def split_projects_within(block: list[Tag]) -> list[list[Tag]]:
     """
-    Extrae el contenido adicional del bloque incluyendo otros enlaces que no sean el principal.
+    Corte secundario: dentro de un bloque, inicia un proyecto nuevo cuando un
+    párrafo arranca con un patrón de proyecto Y el sub-bloque actual ya tiene al
+    menos un documento (evita partir el propio título antes de sus enlaces).
     """
-    # Limpiar el bloque de texto
-    bloque_limpio = bloque_texto.replace("\n", " ").replace("\r", " ")
-    bloque_limpio = re.sub(r'\s+', ' ', bloque_limpio).strip()
-    
-    # Intentar remover el texto del enlace principal del bloque
-    texto_enlace_limpio = texto_enlace_principal.replace('"', '').replace('"', '').replace('"', '')
-    
-    # Buscar otros enlaces en los elementos HTML
-    enlaces_adicionales = []
-    if elementos_html:
-        for elemento in elementos_html:
-            enlaces_en_elemento = elemento.find_all('a', href=True)
-            for enlace in enlaces_en_elemento:
-                texto_enlace = enlace.get_text(strip=True)
-                href_enlace = enlace.get('href', '')
-                
-                # No incluir el enlace principal
-                if texto_enlace != texto_enlace_principal and len(texto_enlace) > 5:
-                    # Construir URL completa si es necesario
-                    if href_enlace.startswith('/'):
-                        url_enlace = f"https://www.invima.gov.co{href_enlace}"
-                    else:
-                        url_enlace = href_enlace
-                    
-                    enlaces_adicionales.append(f"{texto_enlace} ({url_enlace})")
-    
-    # Buscar la posición del título principal en el bloque
-    pos_titulo = bloque_limpio.lower().find(texto_enlace_limpio.lower()[:50])
-    
-    contenido_texto = ""
-    if pos_titulo != -1:
-        # Tomar el texto después del título principal
-        pos_fin_titulo = pos_titulo + len(texto_enlace_limpio)
-        contenido_posterior = bloque_limpio[pos_fin_titulo:].strip()
-        
-        # Limpiar el contenido posterior
-        contenido_posterior = re.sub(r'^[^\w]*', '', contenido_posterior)
-        
-        if len(contenido_posterior) > 20:
-            contenido_texto = contenido_posterior[:600] + ("..." if len(contenido_posterior) > 600 else "")
-    else:
-        # Si no se puede separar, usar una porción del bloque completo
-        if len(bloque_limpio) > len(texto_enlace_principal) + 50:
-            contenido_texto = bloque_limpio[:600] + ("..." if len(bloque_limpio) > 600 else "")
-    
-    # Combinar contenido de texto con enlaces adicionales
-    partes_descripcion = []
-    if contenido_texto:
-        partes_descripcion.append(contenido_texto)
-    
-    if enlaces_adicionales:
-        partes_descripcion.append("Enlaces adicionales: " + " | ".join(enlaces_adicionales))
-    
-    return " | ".join(partes_descripcion) if partes_descripcion else ""
+    subblocks: list[list[Tag]] = []
+    current: list[Tag] = []
+    current_has_doc = False
+
+    for tag in block:
+        tag_text = clean_ws(tag.get_text())
+        # Un inicio de proyecto real es una frase, no una etiqueta corta de enlace
+        # (evita partir en anclas como "Proyecto de Circular").
+        starts_project = bool(PROJECT_START_RE.match(tag_text)) and len(tag_text) > 40
+        if starts_project and current and current_has_doc:
+            subblocks.append(current)
+            current = []
+            current_has_doc = False
+        current.append(tag)
+        if not current_has_doc and tag.select('a[href*="/biblioteca/"]'):
+            current_has_doc = True
+
+    if current:
+        subblocks.append(current)
+    return subblocks
 
 
-def extraer_titulo_del_enlace(texto_enlace):
-    """
-    Extrae el título completo que acompaña a "Proyecto de Resolución".
-    """
-    # Limpiar comillas y caracteres extra
-    titulo_limpio = texto_enlace.strip()
-    titulo_limpio = re.sub(r'^["\'""'']+|["\'""'']+$', '', titulo_limpio)
-    
-    # Si empieza con "Proyecto de Resolución", mantener todo
-    if titulo_limpio.startswith("Proyecto de Resolución"):
-        return titulo_limpio
-    
-    # Si no empieza con "Proyecto de Resolución", agregarlo
-    if "Proyecto de Resolución" not in titulo_limpio:
-        return f"Proyecto de Resolución: {titulo_limpio}"
-    
-    return titulo_limpio
+# --------------------------------------------------------------------------- #
+# Parseo principal
+# --------------------------------------------------------------------------- #
+def parse_html(html: str) -> list[dict]:
+    soup = BeautifulSoup(html, "html.parser")
+    container = find_content_container(soup)
+    logger.info("Contenedor: <%s class=%s>", container.name, container.get("class"))
+
+    primary = split_top_level(container)
+    logger.info("Bloques primarios: %d", len(primary))
+
+    items: list[dict] = []
+    seen: set[tuple[str, str | None]] = set()
+
+    for block in primary:
+        for sub in split_projects_within(block):
+            docs = extract_documents(sub)
+            if not docs:
+                continue  # sin documentos => no es un proyecto publicable
+
+            # get_text() por tag (sin separador) preserva números partidos por
+            # etiquetas inline como "3<b>1 de julio…"; el espacio va entre tags.
+            block_text = clean_ws(" ".join(t.get_text() for t in sub))
+            title = extract_title(block_text, sub)
+            main_url = pick_main_url(docs) or PAGE_URL
+            start, end = extract_period(block_text)
+            email = extract_email(block_text, sub)
+
+            key = (title, main_url)
+            if key in seen:
+                continue
+            seen.add(key)
+
+            # Descripción: texto del bloque recortado + documentos
+            description = block_text[:600] + ("…" if len(block_text) > 600 else "")
+            if email:
+                description += f" | Correo observaciones: {email}"
+
+            item = {
+                # --- claves originales de tu contrato ---
+                "title": title,
+                "description": description,
+                "source_type": SOURCE_TYPE,
+                "category": CATEGORY,
+                "country": COUNTRY,
+                # source_url apunta al documento principal (antes: página)
+                "source_url": main_url,
+                # presentation_date = inicio de consulta (antes: datetime.now())
+                "presentation_date": start,
+                "institution": INSTITUTION,
+                # --- extras (descartables si tu esquema es fijo) ---
+                "consultation_start": start,
+                "consultation_end": end,
+                "contact_email": email,
+                "documents": docs,
+                "extracted_at": datetime.now(),
+            }
+            items.append(item)
+
+    logger.info("Proyectos extraídos: %d", len(items))
+    return items
 
 
-def encontrar_punto_corte_titulo(titulo):
-    """
-    Encuentra un punto natural para cortar el título.
-    """
-    puntos_corte = [
-        (" - ", 140),  # Guión con espacios
-        (". ", 130),   # Punto y espacio
-        (", ", 120),   # Coma y espacio
-        (" y ", 110),  # Conjunción
-        (" de ", 100), # Preposición
-    ]
-    
-    for separador, max_pos in puntos_corte:
-        pos = titulo.rfind(separador, 0, max_pos)
-        if pos > 50:  # Asegurar que el corte no sea muy temprano
-            return pos + len(separador)
-    
-    # Si no encuentra un punto natural, cortar en 140 caracteres
-    return 140
-
-
-def extraer_contenido_adicional(bloque_texto, texto_enlace):
-    """
-    Extrae el contenido adicional del bloque que no es el título principal.
-    """
-    # Limpiar el bloque de texto
-    bloque_limpio = bloque_texto.replace("\n", " ").replace("\r", " ")
-    bloque_limpio = re.sub(r'\s+', ' ', bloque_limpio).strip()
-    
-    # Intentar remover el texto del enlace del bloque
-    texto_enlace_limpio = texto_enlace.replace('"', '').replace('"', '').replace('"', '')
-    
-    # Buscar la posición del título en el bloque
-    pos_titulo = bloque_limpio.lower().find(texto_enlace_limpio.lower()[:50])
-    
-    if pos_titulo != -1:
-        # Tomar el texto después del título
-        pos_fin_titulo = pos_titulo + len(texto_enlace_limpio)
-        contenido_posterior = bloque_limpio[pos_fin_titulo:].strip()
-        
-        # Limpiar el contenido posterior
-        contenido_posterior = re.sub(r'^[^\w]*', '', contenido_posterior)  # Remover caracteres no-palabra al inicio
-        
-        if len(contenido_posterior) > 20:  # Solo si hay contenido significativo
-            return contenido_posterior[:800] + ("..." if len(contenido_posterior) > 800 else "")
-    
-    # Si no se puede separar, usar una porción del bloque completo
-    if len(bloque_limpio) > len(texto_enlace) + 50:
-        return bloque_limpio[:800] + ("..." if len(bloque_limpio) > 800 else "")
-    
-    return ""
-
-
-def parse_spanish_date(fecha_str):
-    """
-    Convierte fechas en español a objeto datetime.
-    """
-    meses = {
-        'enero': 1, 'febrero': 2, 'marzo': 3, 'abril': 4,
-        'mayo': 5, 'junio': 6, 'julio': 7, 'agosto': 8,
-        'septiembre': 9, 'octubre': 10, 'noviembre': 11, 'diciembre': 12
+async def scrape_invima_proyectos_normativos_co() -> list[dict]:
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+        )
     }
-    
-    fecha_limpia = re.sub(r'^(lunes|martes|miércoles|jueves|viernes|sábado|domingo)\s+', '', fecha_str.lower().strip())
-    
-    patron = r'(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})'
-    match = re.search(patron, fecha_limpia)
-    
-    if match:
-        dia = int(match.group(1))
-        mes_nombre = match.group(2)
-        año = int(match.group(3))
-        
-        if mes_nombre in meses:
-            mes = meses[mes_nombre]
-            return datetime(año, mes, dia)
-    
-    return None
+    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True, headers=headers) as client:
+        try:
+            resp = await client.get(PAGE_URL)
+            resp.raise_for_status()
+        except httpx.HTTPError as e:
+            logger.error("Error al obtener la página: %s", e)
+            return []
+    return parse_html(resp.text)
+
+
+# --------------------------------------------------------------------------- #
+# CLI
+# --------------------------------------------------------------------------- #
+def _serialize(item: dict) -> dict:
+    out = dict(item)
+    for field in ("presentation_date", "consultation_start", "consultation_end", "extracted_at"):
+        if isinstance(out.get(field), datetime):
+            out[field] = out[field].strftime("%Y-%m-%d")
+    return out
 
 
 if __name__ == "__main__":
-    # Ejecutar el scraper y mostrar los resultados
-    items = asyncio.run(scrape_invima_proyectos_normativos_co())
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
-    if items:
-        # Formatear salida como JSON
-        print(json.dumps([{
-            **item,
-            'presentation_date': item['presentation_date'].strftime('%Y-%m-%d') if item['presentation_date'] else None
-        } for item in items], indent=4, ensure_ascii=False))
+    if len(sys.argv) > 1:  # modo prueba con HTML local
+        with open(sys.argv[1], encoding="utf-8") as fh:
+            items = parse_html(fh.read())
     else:
-        print("No se encontraron proyectos normativos")
+        items = asyncio.run(scrape_invima_proyectos_normativos_co())
+
+    print(json.dumps([_serialize(i) for i in items], indent=2, ensure_ascii=False))

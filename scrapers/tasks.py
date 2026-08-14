@@ -482,8 +482,24 @@ AVAILABLE_SCRAPERS = {
         'name': 'Panorama Eventos',
         'description': 'Obtiene eventos de Panorama Farmacêutico'       
     },
-
-
+    'digemaps_noticias':{
+        'module': 'scrapers.scrapers.digemaps_noti_do',
+        'function': 'scrape_digemaps_noti_do',
+        'name': 'Digemaps Noticias',
+        'description': 'Obtiene noticias de Digemaps República Dominicana'       
+    },
+    'arsa_noticias':{
+        'module': 'scrapers.scrapers.arsa_noti_hn',
+        'function': 'scrape_arsa_noti_hn',
+        'name': 'ARSA Noticias',
+        'description': 'Obtiene noticias de ARSA Honduras'
+    },
+    'invima_resoluciones':{
+        'module': 'scrapers.scrapers.invima_resoluciones_co',
+        'function': 'scrape_invima_resoluciones_co',
+        'name': 'INVIMA Resoluciones',
+        'description': 'Obtiene resoluciones de INVIMA Colombia'
+    },
 
 
 
