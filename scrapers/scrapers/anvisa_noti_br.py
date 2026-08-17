@@ -1,111 +1,165 @@
 import asyncio
 import httpx
-from bs4 import BeautifulSoup
 from datetime import datetime
-import re
 import json
 
 
-async def scrape_anvisa_noti_br():
+# ---------------------------------------------------------------------------
+# Configuración
+# ---------------------------------------------------------------------------
+
+BASE = "https://www.gov.br"
+# Endpoint real que usa el frontend Volto (Plone REST API vía traversal ++api++)
+API_URL = f"{BASE}/anvisa/++api++/pt-br/assuntos/noticias-anvisa/@querystring-search"
+
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    ),
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+}
+
+# Cantidad de noticias a traer (una sola página)
+B_SIZE = 30
+
+# Cuerpo de @querystring-search: filtra por "News Item", ordena por fecha
+# efectiva descendente y pide los metadatos que necesitamos.
+QUERY_BODY = {
+    "query": [
+        {
+            "i": "portal_type",
+            "o": "plone.app.querystring.operation.selection.any",
+            "v": ["News Item"],
+        }
+    ],
+    "b_size": B_SIZE,
+    "sort_on": "effective",
+    "sort_order": "descending",
+    "metadata_fields": ["effective", "Description", "Subject", "subtitle"],
+    "fullobjects": False,
+}
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _parse_iso(value):
+    """Parsea una fecha ISO (con o sin zona) a datetime naive."""
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return dt.replace(tzinfo=None)
+    except (ValueError, AttributeError):
+        return None
+
+
+def _to_public_url(api_id):
     """
-    Scraper para extraer noticias desde el sitio web de ANVISA adaptado al estilo del scraper base.
+    Convierte la URL de la API en la URL pública navegable.
+    (El @id de este endpoint ya viene sin ++api++, pero lo dejamos robusto.)
     """
-    url = "https://www.gov.br/anvisa/pt-br/assuntos/noticias-anvisa"
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    if not api_id:
+        return ""
+    url = api_id.replace("/++api++", "")
+    if not url.startswith("http"):
+        url = f"{BASE}{url}"
+    return url
+
+
+def _build_item(result):
+    """Mapea un resultado de la API al esquema del pipeline."""
+    titulo = result.get("title") or "Sin título"
+
+    # description = subtitle + "|" + description (formato del scraper original)
+    subtitulo = (result.get("subtitle") or "").strip()
+    descripcion = (result.get("description") or result.get("Description") or "").strip()
+    if not subtitulo:
+        subtitulo = "Sin subtítulo"
+    if not descripcion:
+        descripcion = "Sin descripción"
+    description = f"{subtitulo}|{descripcion}"
+
+    source_url = _to_public_url(result.get("@id") or result.get("getURL"))
+    fecha = _parse_iso(result.get("effective"))
+
+    subjects = result.get("Subject") or []
+    if isinstance(subjects, list) and subjects:
+        etiquetas = ", ".join(str(s) for s in subjects)
+    else:
+        etiquetas = "Sin etiquetas"
+
+    return {
+        "title": titulo,
+        "description": description,
+        "source_type": "Ejecutivo",
+        "category": "Noticias",
+        "country": "Brasil",
+        "source_url": source_url,
+        "presentation_date": fecha,  # objeto datetime o None
+        "metadata": {"tags": etiquetas},
+        "institution": "ANVISA Brasil",
     }
 
-    async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
-        try:
-            # Intentar realizar la solicitud con reintentos
-            for intento in range(3):
-                try:
-                    response = await client.get(url, headers=headers)
-                    response.raise_for_status()
-                    break
-                except httpx.RequestError as e:
-                    print(f"Error en el intento {intento + 1}: {e}")
-            else:
-                print("Todos los intentos fallaron. Abortando.")
-                return []
 
-            soup = BeautifulSoup(response.text, "html.parser")
+# ---------------------------------------------------------------------------
+# Scraper principal
+# ---------------------------------------------------------------------------
 
-            # Seleccionar todas las noticias
-            lista_noticias = soup.select("ul.noticias.listagem-noticias-com-foto > li")
-            items = []
+async def scrape_anvisa_noti_br():
+    """
+    Extrae noticias de ANVISA desde el endpoint @querystring-search de la
+    Plone REST API (POST, formato plone.app.querystring).
+    """
+    async with httpx.AsyncClient(timeout=httpx.Timeout(30.0), follow_redirects=True) as client:
+        for intento in range(3):
+            try:
+                resp = await client.post(API_URL, headers=HEADERS, json=QUERY_BODY)
+                resp.raise_for_status()
+                data = resp.json()
 
-            for noticia in lista_noticias:
-                try:
-                    # Extraer título
-                    titulo_tag = noticia.select_one("h2.titulo a")
-                    titulo = titulo_tag.get_text(strip=True) if titulo_tag else "Sin título"
-
-                    # Extraer enlace
-                    enlace = titulo_tag["href"] if titulo_tag else None
-                    url_completa = enlace if enlace.startswith("http") else f"https://www.gov.br{enlace}"
-
-                    # Extraer subtítulo
-                    subtitulo_tag = noticia.select_one("div.subtitulo-noticia")
-                    subtitulo = subtitulo_tag.get_text(strip=True) if subtitulo_tag else "Sin subtítulo"
-
-                    # Extraer fecha
-                    fecha_tag = noticia.select_one("span.data")
-                    fecha_texto = fecha_tag.get_text(strip=True) if fecha_tag else None
+                resultados = data.get("items", []) if isinstance(data, dict) else []
+                items = []
+                for r in resultados:
                     try:
-                        fecha_actual = datetime.strptime(fecha_texto, "%d/%m/%Y") if fecha_texto else None
-                        #print(f"Fecha actualizada: {fecha_actual}")
-                    except ValueError:
-                        print(f"Fecha inválida: {fecha_texto}")
-                        fecha_actual = None
+                        items.append(_build_item(r))
+                    except Exception as e:
+                        print(f"Error procesando resultado: {e}")
 
-                    # Extraer descripción
-                    descripcion_tag = noticia.select_one("span.descricao")
-                    descripcion = (
-                        descripcion_tag.get_text(strip=True).replace(fecha_texto, "").strip()
-                        if descripcion_tag and fecha_texto
-                        else "Sin descripción"
-                    )
+                print(f"{len(items)} noticias obtenidas.")
+                return items
 
-                    # Extraer etiquetas/tags
-                    tags = [
-                        tag.get_text(strip=True)
-                        for tag in noticia.select("div.subject-noticia a.link-category")
-                    ]
-                    etiquetas = ", ".join(tags) if tags else "Sin etiquetas"
+            except httpx.HTTPStatusError as e:
+                print(f"HTTP {e.response.status_code} en intento {intento + 1}.")
+                break  # error del servidor: no tiene sentido reintentar el mismo request
+            except (httpx.RequestError, json.JSONDecodeError, ValueError) as e:
+                print(f"Error en intento {intento + 1}: {e}")
 
-                    # Crear el diccionario del item
-                    item = {
-                        'title': titulo,
-                        'description':subtitulo + "|" + descripcion,
-                        'source_type': "Ejecutivo",
-                        'category': "Noticias",
-                        'country': "Brasil",
-                        'source_url': url_completa,
-                        'presentation_date': fecha_actual,  # Pasamos el objeto datetime directamente
-                        'metadata': {
-                            'tags': etiquetas
-                        },
-                        'institution': "ANVISA Brasil"
-                    }
-                    items.append(item)
-
-                except Exception as e:
-                    print(f"Error procesando noticia: {e}")
-
-            return items
-
-        except Exception as e:
-            print(f"Error general: {e}")
-            return []
+        print("No se pudieron obtener noticias.")
+        return []
 
 
-# if __name__ == "__main__":
-#     # Ejecutar el scraper y mostrar los resultados
-#     items = asyncio.run(scrape_anvisa_noticias())
+# ---------------------------------------------------------------------------
+# Ejecución directa
+# ---------------------------------------------------------------------------
 
-#     # Formatear salida como JSON
-#     print(json.dumps([{
-#         **item,
-#         'presentation_date': item['presentation_date'].strftime('%Y-%m-%d') if item['presentation_date'] else None
-#     } for item in items], indent=4, ensure_ascii=False))
+if __name__ == "__main__":
+    items = asyncio.run(scrape_anvisa_noti_br())
+
+    print(json.dumps(
+        [
+            {
+                **item,
+                "presentation_date": (
+                    item["presentation_date"].strftime("%Y-%m-%d")
+                    if item["presentation_date"] else None
+                ),
+            }
+            for item in items
+        ],
+        indent=4,
+        ensure_ascii=False,
+    ))
