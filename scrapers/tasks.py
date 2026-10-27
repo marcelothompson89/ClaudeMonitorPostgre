@@ -500,6 +500,13 @@ AVAILABLE_SCRAPERS = {
         'name': 'INVIMA Resoluciones',
         'description': 'Obtiene resoluciones de INVIMA Colombia'
     },
+    'senado_proyectoley_co':{
+        'module': 'scrapers.scrapers.senado_proyectoley_co',
+        'function': 'scrape_congreso_visible_co',
+        'name': 'Senado Proyecto de Ley',
+        'description': 'Obtiene proyectos de ley del Senado de Colombia'
+    },
+
 
 
 

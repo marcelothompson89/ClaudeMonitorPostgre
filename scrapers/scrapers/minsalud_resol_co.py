@@ -167,16 +167,16 @@ async def scrape_minsalud_resoluciones_co():
             driver.quit()
             print("[Minsalud_Resoluciones_CO] Navegador cerrado")
 
-# if __name__ == "__main__":
-#     items = asyncio.run(scrape_minsalud_resoluciones())
+if __name__ == "__main__":
+    items = asyncio.run(scrape_minsalud_resoluciones_co())
     
-#     # Convertir objetos date a string en formato "YYYY-MM-DD"
-#     json_output = json.dumps(
-#         [{**item, "presentation_date": item["presentation_date"].strftime("%Y-%m-%d") if item["presentation_date"] else None}
-#          for item in items], 
-#         indent=4, 
-#         ensure_ascii=False
-#     )
+    # Convertir objetos date a string en formato "YYYY-MM-DD"
+    json_output = json.dumps(
+        [{**item, "presentation_date": item["presentation_date"].strftime("%Y-%m-%d") if item["presentation_date"] else None}
+         for item in items], 
+        indent=4, 
+        ensure_ascii=False
+    )
     
-#     print(json_output)
+    print(json_output)
 

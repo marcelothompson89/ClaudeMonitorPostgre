@@ -97,16 +97,16 @@ async def scrape_cepal_noticias_reg():
     return items
 
 
-# if __name__ == "__main__":
-#     # Ejecutar el scraper
-#     items = asyncio.run(scrape_cepal_noticias_reg())
+if __name__ == "__main__":
+    # Ejecutar el scraper
+    items = asyncio.run(scrape_cepal_noticias_reg())
 
-#     # Mostrar resultados en formato JSON
-#     print(json.dumps([
-#         {
-#             **item,
-#             'presentation_date': item['presentation_date'].strftime('%Y-%m-%d %H:%M:%S') 
-#                 if isinstance(item['presentation_date'], datetime) else None
-#         }
-#         for item in items
-#     ], indent=4, ensure_ascii=False))
+    # Mostrar resultados en formato JSON
+    print(json.dumps([
+        {
+            **item,
+            'presentation_date': item['presentation_date'].strftime('%Y-%m-%d %H:%M:%S') 
+                if isinstance(item['presentation_date'], datetime) else None
+        }
+        for item in items
+    ], indent=4, ensure_ascii=False))

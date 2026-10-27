@@ -10,8 +10,12 @@ async def scrape_ispch_noticias_cl():
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
-        
+        # El servidor cierra la conexión (ERR_EMPTY_RESPONSE) si detecta el UA "HeadlessChrome"
+        context = await browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+        )
+        page = await context.new_page()
+
         try:
             print(f"[ISPCH Noticias_CL] Accediendo a URL: {url}")
             await page.goto(url, timeout=60000)  # Esperar hasta 60s si la página tarda en cargar
@@ -106,10 +110,10 @@ def _parse_date(fecha_str):
         return datetime.now().date()
 
 
-# if __name__ == "__main__":
-#     # Ejecutar el scraper y mostrar los resultados en JSON
-#     noticias = asyncio.run(scrape_ispch_noticias_cl())
-#     print(json.dumps([{
-#         **noticia,
-#         'presentation_date': noticia['presentation_date'].strftime('%Y-%m-%d') if noticia['presentation_date'] else None
-#     } for noticia in noticias], indent=4, ensure_ascii=False))
+if __name__ == "__main__":
+    # Ejecutar el scraper y mostrar los resultados en JSON
+    noticias = asyncio.run(scrape_ispch_noticias_cl())
+    print(json.dumps([{
+        **noticia,
+        'presentation_date': noticia['presentation_date'].strftime('%Y-%m-%d') if noticia['presentation_date'] else None
+    } for noticia in noticias], indent=4, ensure_ascii=False))

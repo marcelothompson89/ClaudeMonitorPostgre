@@ -36,24 +36,24 @@ async def scrape_minsa_noti_pa():
             for noticia in noticias:
                 try:
                     # Extraer título y URL
-                    link = noticia.select_one("div.minsa-title a")
+                    link = noticia.select_one("div.teaser--title a")
                     if not link:
                         continue
-                    
+
                     title = link.text.strip()
                     noticia_url = link["href"]
                     noticia_url = f"{base_url}{noticia_url}" if noticia_url.startswith("/") else noticia_url
 
                     # Extraer fecha
-                    fecha_element = noticia.select_one("div.minsa-date")
+                    fecha_element = noticia.select_one("div.teaser--date")
                     fecha = _parse_date(fecha_element.text.strip()) if fecha_element else datetime.now().date()
 
                     # Extraer descripción
-                    descripcion_element = noticia.select_one("div.minsa-body")
+                    descripcion_element = noticia.select_one("div.teaser--summary")
                     descripcion = descripcion_element.text.strip() if descripcion_element else title
 
                     # Extraer imagen
-                    img_element = noticia.select_one("div.minsa-image img")
+                    img_element = noticia.select_one("div.teaser--image--horizontal img")
                     imagen_url = img_element["src"] if img_element else None
                     if imagen_url and not imagen_url.startswith("http"):
                         imagen_url = f"{base_url}{imagen_url}"
@@ -90,7 +90,7 @@ async def scrape_minsa_noti_pa():
 
 def _parse_date(fecha_str):
     """
-    Convierte fechas en español como "18 de Febrero de 2025" a formato datetime.
+    Convierte fechas en español como "Martes, 18 de Febrero de 2025" a formato datetime.
     Si falla, usa la fecha actual.
     """
     meses = {
@@ -99,8 +99,9 @@ def _parse_date(fecha_str):
     }
 
     try:
-        fecha_str = fecha_str.replace("de", "").strip()
-        dia, mes, anio = fecha_str.split()
+        # Quitar el día de la semana ("Martes, ") si viene
+        partes = fecha_str.split(",")[-1].split()
+        dia, mes, anio = [p for p in partes if p.lower() != "de"]
         mes_num = meses[mes.lower()]
         return datetime(int(anio), mes_num, int(dia)).date()
     except Exception as e:

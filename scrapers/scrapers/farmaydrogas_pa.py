@@ -89,10 +89,10 @@ def _extract_date_from_title(title):
     return datetime.now().date()  # Si falla, usar la fecha actual
 
 
-# if __name__ == "__main__":
-#     # Ejecutar el scraper y mostrar los resultados en JSON
-#     resoluciones = asyncio.run(scrape_minsa_resoluciones())
-#     print(json.dumps([{
-#         **res,
-#         'presentation_date': res['presentation_date'].strftime('%Y-%m-%d') if res['presentation_date'] else None
-#     } for res in resoluciones], indent=4, ensure_ascii=False))
+if __name__ == "__main__":
+    # Ejecutar el scraper y mostrar los resultados en JSON
+    resoluciones = asyncio.run(scrape_farmaydrogas_pa())
+    print(json.dumps([{
+        **res,
+        'presentation_date': res['presentation_date'].strftime('%Y-%m-%d') if res['presentation_date'] else None
+    } for res in resoluciones], indent=4, ensure_ascii=False))

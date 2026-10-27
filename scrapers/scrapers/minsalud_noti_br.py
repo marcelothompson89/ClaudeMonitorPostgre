@@ -9,12 +9,12 @@ async def scrape_minsalud_noticias_br():
     """
     Scraper para la página de noticias del Ministério da Saúde de Brasil.
     """
-    url = "https://www.gov.br/saude/pt-br/assuntos/noticias"
+    url = "https://www.gov.br/saude/pt-br/assuntos/noticias-ms"
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
 
-    async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
+    async with httpx.AsyncClient(timeout=httpx.Timeout(30.0), follow_redirects=True) as client:
         try:
             # Intentar realizar la solicitud con reintentos
             for intento in range(3):
@@ -89,12 +89,12 @@ async def scrape_minsalud_noticias_br():
             return []
 
 
-# if __name__ == "__main__":
-#     # Ejecutar el scraper y mostrar los resultados
-#     items = asyncio.run(scrape_minsalud_noticias_br())
+if __name__ == "__main__":
+    # Ejecutar el scraper y mostrar los resultados
+    items = asyncio.run(scrape_minsalud_noticias_br())
 
-#     # Formatear salida como JSON
-#     print(json.dumps([{
-#         **item,
-#         'presentation_date': item['presentation_date'].strftime('%Y-%m-%d %H:%M') if item['presentation_date'] else None
-#     } for item in items], indent=4, ensure_ascii=False))
+    # Formatear salida como JSON
+    print(json.dumps([{
+        **item,
+        'presentation_date': item['presentation_date'].strftime('%Y-%m-%d %H:%M') if item['presentation_date'] else None
+    } for item in items], indent=4, ensure_ascii=False))
